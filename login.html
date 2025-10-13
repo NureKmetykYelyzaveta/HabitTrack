@@ -7,44 +7,49 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- ==== Фонове відео ==== -->
-  <video class="bg-video" autoplay muted loop playsinline preload="metadata">
-    <source src="assets/videos/pulse.mp4" type="video/mp4" />
-    Ваш браузер не підтримує відео.
-  </video>
 
-  <!-- Затемнение поверх видео -->
-  <div class="video-overlay"></div>
+  <main class="auth-wrap">
+    <section class="auth-card">
 
-  <!-- ==== Форма входа ==== -->
-  <div class="login-container">
-    <div class="title">HabitTrack</div>
+      <!-- Ліва частина з відео -->
+      <div class="auth-media">
+        <video class="auth-video" autoplay muted loop playsinline preload="metadata">
+          <source src="assets/videos/pulse.mp4" type="video/mp4" />
+          Ваш браузер не підтримує відео.
+        </video>
+        <div class="media-overlay"></div>
+        <div class="media-caption">
+          <h3>HabitTrack</h3>
+          <p>Контролюй звички. Створюй кращі дні.</p>
+        </div>
+      </div>
 
-    <div class="input-group">
-      <label for="email">Електронна пошта</label>
-      <input type="email" id="email" placeholder="Введіть email" />
-    </div>
+      <!-- Права частина з формою -->
+      <div class="auth-form">
+        <h1 class="form-title">Увійти в акаунт</h1>
 
-    <div class="input-group">
-      <label for="password">Пароль</label>
-      <input type="password" id="password" placeholder="Введіть пароль" />
-    </div>
+        <div class="input-group">
+          <label for="email">Електронна пошта</label>
+          <input type="email" id="email" placeholder="Введіть email" />
+        </div>
 
-    <button class="btn" id="loginBtn">Увійти</button>
+        <div class="input-group">
+          <label for="password">Пароль</label>
+          <input type="password" id="password" placeholder="Введіть пароль" />
+        </div>
 
-    <div class="error" id="errorMsg">Будь ласка, заповніть усі поля</div>
-    <div class="success" id="successMsg">Вхід виконано успішно!</div>
+        <button class="btn" id="loginBtn">Увійти</button>
 
-    <div class="footer">
-      Немає акаунта? <a href="#">Зареєструватися</a>
-    </div>
-  </div>
+        <div class="error" id="errorMsg">Будь ласка, заповніть усі поля</div>
+        <div class="success" id="successMsg">Вхід виконано успішно!</div>
 
-  <!-- ==== Слоган унизу ==== -->
-  <div class="slogan">
-    <h1>Контролюй свої звички,<br>покращуй якість життя</h1>
-    <p>HabitTrack допоможе тобі відстежувати сон, спорт і харчування щодня</p>
-  </div>
+        <div class="footer">
+          Немає акаунта? <a href="#">Зареєструватися</a>
+        </div>
+      </div>
+
+    </section>
+  </main>
 
   <script>
     const loginBtn = document.getElementById('loginBtn');
@@ -64,7 +69,6 @@
         return;
       }
 
-      // Імітація успішного входу
       setTimeout(() => {
         successMsg.style.display = 'block';
         emailInput.value = '';
