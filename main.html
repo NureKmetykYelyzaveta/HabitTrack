@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HabitTrack — Головна</title>
+  <link rel="stylesheet" href="style/main.css" />
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+</head>
+<body>
+
+
+  <header class="navbar glass">
+    <div class="logo">HabitTrack</div>
+    <nav class="nav-links">
+      <a href="#">Головна</a>
+      <a href="#about">Про нас</a>
+      <a href="#features">Функції</a>
+      <a href="#contact">Контакти</a>
+    </nav>
+    <div class="auth-buttons">
+      <a href="login.html" class="btn btn-outline">Увійти</a>
+      <a href="#" class="btn btn-fill">Зареєструватися</a>
+    </div>
+  </header>
+
+
+<main class="hero-section">
+  <div id="particles-js"></div>
+  <section class="hero-content glass">
+    <h1>Контролюй звички. Створюй кращі дні.</h1>
+    <p>HabitTrack — це інструмент, що допомагає формувати здорові звички та вдосконалювати себе щодня.</p>
+    <div class="hero-buttons">
+      <a href="#" class="btn btn-fill">Почати зараз</a>
+      <a href="#about" class="btn btn-outline">Дізнатись більше</a>
+    </div>
+  </section>
+</main>
+
+
+
+<section id="about" class="section glass about">
+  <h2>Про HabitTrack</h2>
+  <p>
+    HabitTrack допомагає легко відстежувати щоденні звички та формувати корисні ритуали. 
+    Завдяки інтерактивній статистиці, нагадуванням та плануванню, ти завжди залишаєшся на шляху до кращої версії себе. 
+    З нами ти зможеш підвищити продуктивність, підтримувати баланс між роботою та відпочинком та насолоджуватися процесом вдосконалення.
+  </p>
+</section>
+
+
+
+  <section id="features" class="section features">
+    <h2>Що пропонує HabitTrack</h2>
+    <div class="features-grid">
+      <div class="feature-card glass">
+        <h3>📅 Плануй звички</h3>
+        <p>Створюй список щоденних завдань і відмічай виконане для відчуття прогресу.</p>
+      </div>
+      <div class="feature-card glass">
+        <h3>📊 Аналітика</h3>
+        <p>Відстежуй результати, переглядай статистику та досягай нових цілей.</p>
+      </div>
+      <div class="feature-card glass">
+        <h3>🌙 Баланс</h3>
+        <p>Сон, спорт, харчування — зберігай баланс у всіх сферах життя.</p>
+      </div>
+      <div class="feature-card glass">
+        <h3>🔔 Нагадування</h3>
+        <p>Отримуй сповіщення, щоб не пропускати важливі звички.</p>
+      </div>
+    </div>
+  </section>
+
+
+  <section id="contact" class="section glass contact">
+    <h2>Зв’язатися з нами</h2>
+    <p>Маєш пропозиції чи питання? Напиши нам!</p>
+    <form class="contact-form">
+      <input type="text" placeholder="Ваше ім’я" required />
+      <input type="email" placeholder="Email" required />
+      <textarea placeholder="Ваше повідомлення" rows="4" required></textarea>
+      <button type="submit" class="btn btn-fill">Надіслати</button>
+    </form>
+  </section>
+
+
+  <footer class="footer glass">
+    <p>© 2025 HabitTrack. Усі права захищені.</p>
+  </footer>
+
+  <script>
+    particlesJS("particles-js", {
+      "particles": {
+        "number": {"value": 80},
+        "color": {"value": "#00ff88"},
+        "shape": {"type": "circle"},
+        "opacity": {"value": 0.5},
+        "size": {"value": 3},
+        "line_linked": {"enable": true, "distance": 120, "color": "#00ff88", "opacity": 0.3, "width": 1},
+        "move": {"enable": true, "speed": 2}
+      },
+      "interactivity": {
+        "events": {
+          "onhover": {"enable": true, "mode": "repulse"},
+          "onclick": {"enable": true, "mode": "push"}
+        },
+        "modes": {"repulse": {"distance": 100}, "push": {"particles_nb": 4}}
+      }
+    });
+  </script>
+
+</body>
+</html>

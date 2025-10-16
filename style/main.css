@@ -1,0 +1,295 @@
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  background: radial-gradient(ellipse at top, #0b0b0b 40%, #050505 100%);
+  color: #e0e0e0;
+  overflow-x: hidden;
+}
+
+
+.glass {
+  background: rgba(15, 15, 15, 0.55);
+  border: 1px solid rgba(0, 255, 120, 0.15);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 25px rgba(0, 255, 120, 0.15);
+  border-radius: 16px;
+}
+
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 36px 60px;
+  z-index: 100;
+}
+
+.logo {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  font-weight: 700;
+  font-size: 32px;
+  color: #00ff88;
+  letter-spacing: 0.6px;
+  text-shadow: 0 0 8px rgba(0, 255, 120, 0.5);
+}
+
+.nav-links {
+  display: flex;           
+  gap: 40px;                
+  justify-content: center;  
+  align-items: center;      
+  position: relative;       
+  left: 50px;                  
+  top: 0;                   
+}
+
+
+.nav-links a {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  color: #e0e0e0;
+  text-decoration: none;
+  font-size: 20px;
+  transition: color 0.3s;
+}
+
+
+.nav-links a:hover {
+  color: #00ff88;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+
+.btn-fill {
+  background: linear-gradient(90deg, #00b060, #00ff88);
+  color: #fff;
+  box-shadow: 0 0 18px rgba(0, 255, 120, 0.3);
+}
+
+.btn-fill:hover {
+  background: linear-gradient(90deg, #00ff88, #00d670);
+  box-shadow: 0 0 25px rgba(0, 255, 120, 0.5);
+}
+
+.btn-outline {
+  border: 1px solid #00ff88;
+  color: #00ff88;
+  background: transparent;
+}
+
+.btn-outline:hover {
+  background: rgba(0, 255, 120, 0.1);
+  box-shadow: 0 0 18px rgba(0, 255, 120, 0.3);
+}
+
+
+.hero-section {
+  position: relative;
+  height: 100vh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: #fff;
+  overflow: hidden;
+}
+
+.hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.6) saturate(1.2);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.6), rgba(5, 5, 5, 0.7));
+}
+
+.hero-content {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  position: relative;
+  z-index: 2;
+  max-width: 760px;
+  padding: 40px;
+  animation: fadeIn 1.6s ease;
+}
+
+.hero-content h1 {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  font-size: clamp(28px, 5vw, 40px);
+  color: #00ff88;
+  margin-bottom: 20px;
+  text-shadow: 0 0 12px rgba(0, 255, 120, 0.6);
+}
+
+.hero-content p {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  font-size: 16px;
+  color: #c9c9c9;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
+.section {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  padding: 80px 10%;
+  text-align: center;
+  margin-block: 60px;
+}
+
+.section h2 {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  color: #00ff88;
+  font-size: clamp(24px, 4vw, 34px);
+  margin-bottom: 20px;
+  text-shadow: 0 0 10px rgba(0, 255, 120, 0.4);
+}
+
+.section p {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  color: #ccc;
+  font-size: 17px;
+  line-height: 1.7;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 30px;
+  margin-top: 50px;
+}
+
+.feature-card {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  padding: 30px;
+  transition: all 0.35s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 35px rgba(0, 255, 120, 0.45);
+}
+
+.feature-card h3 {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  color: #00ff88;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.feature-card p {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  color: #ccc;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+
+.contact-form {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+  max-width: 480px;
+  margin-inline: auto;
+}
+
+.contact-form input,
+.contact-form textarea {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(20, 20, 20, 0.85);
+  border: 1px solid rgba(0, 255, 120, 0.2);
+  color: #e0e0e0;
+  font-size: 15px;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+  border-color: #00ff88;
+  outline: none;
+  box-shadow: 0 0 10px rgba(0, 255, 120, 0.4);
+}
+
+
+.footer {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  text-align: center;
+  padding: 40px 0;
+  font-size: 14px;
+  color: #777;
+  border-top: 1px solid rgba(0, 255, 120, 0.15);
+}
+
+
+@media (max-width: 768px) {
+  .navbar { flex-wrap: wrap; padding: 16px 24px; }
+  .nav-links { display: none; }
+  .auth-buttons { margin-top: 10px; }
+  .hero-content p { font-size: 15px; }
+  .features-grid { grid-template-columns: 1fr; }
+}
+
+
+/* Частинки на весь екран */
+#particles-js {
+  position: fixed;   
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;       
+}
+
+
+.hero-content {
+  position: relative;
+  z-index: 2;        
+}
