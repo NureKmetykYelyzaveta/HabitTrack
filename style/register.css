@@ -1,0 +1,139 @@
+/* базовые */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:"Poppins",system-ui,-apple-system,Arial,sans-serif;
+  background:#0b0b0b;
+  color:#e0e0e0;
+}
+
+/* центрирование */
+.auth-wrap{
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  padding:24px;
+}
+
+/* карточка */
+.auth-card{
+  width:min(1100px,96vw);
+  height:clamp(520px,72vh,720px);
+  background:rgba(15,15,15,0.92);
+  border:1px solid rgba(0,255,100,0.25);
+  border-radius:24px;             /* чуть больше радиус как в логине */
+  overflow:hidden;                /* чтобы видео не выходило за рамку */
+  display:grid;
+  grid-template-columns:1.25fr 1fr;
+  box-shadow:0 0 35px rgba(0,255,100,0.25);
+}
+
+/* левая часть: видео полностью заполняет панель */
+.auth-media{position:relative}
+.auth-video{
+  position:absolute;              /* ключ: растягиваем на весь блок */
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;               /* без чёрных полос */
+  filter:saturate(1.05) contrast(1.05);
+}
+.media-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(0,0,0,0.35),rgba(0,255,120,0.12));
+  pointer-events:none;
+}
+.media-caption{
+  position:absolute;left:20px;bottom:20px;
+  color:#eafff5;
+  text-shadow:0 0 10px rgba(0,255,120,0.6);
+}
+.media-caption h2{font-size:28px;letter-spacing:.5px}
+.media-caption p{opacity:.9}
+
+/* правая часть */
+.auth-form{
+  padding:38px 36px 20px;         /* добавил нижний отступ */
+  display:flex;flex-direction:column;gap:14px;
+  overflow:auto;                   /* если не влезает — прокрутка */
+}
+
+/* заголовок */
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.logo-dot{
+  width:14px;height:14px;border-radius:50%;
+  background:radial-gradient(circle at 40% 40%,#00ff88,#00cc6a);
+  box-shadow:0 0 16px rgba(0,255,120,.75),0 0 28px rgba(0,255,120,.35);
+}
+.brand h1{font-size:26px;font-weight:700}
+.subtitle{color:#a7f3d0;font-size:14px;margin-bottom:8px;opacity:.9}
+
+/* форма */
+.form{display:grid;grid-template-columns:1fr;gap:10px}
+.label{font-size:14px;color:#cfd8d3;margin-top:6px}
+.input{
+  width:100%;padding:12px 12px;border-radius:12px;
+  border:1px solid rgba(0,255,120,0.35);
+  background:rgba(3,3,3,0.65);color:#eafff5;
+  outline:none;transition:border-color .2s, box-shadow .2s, background .2s;
+}
+.input::placeholder{color:#9adbbf}
+.input:focus{
+  border-color:#00ff88;
+  box-shadow:0 0 0 3px rgba(0,255,120,.25);
+  background:rgba(6,6,6,.85);
+}
+
+/* чекбокс */
+.checkbox{display:flex;align-items:center;gap:10px;margin-top:6px;margin-bottom:4px;font-size:14px;color:#cfd8d3}
+.checkbox input{width:16px;height:16px}
+
+/* сообщения */
+.msg{display:none;margin-top:4px}
+.error{color:#ff6b6b;font-size:14px}
+.success{color:#00ff88;font-size:14px;text-shadow:0 0 6px rgba(0,255,120,.4)}
+
+/* зона действий внизу формы — всегда на виду */
+.form-actions{
+  position:sticky;
+  bottom:0;
+  padding-top:12px;
+  padding-bottom:4px;
+  background:linear-gradient(180deg,rgba(15,15,15,0),rgba(15,15,15,0.92));
+}
+
+/* кнопка */
+.btn{
+  width:100%;
+  padding:14px 16px;
+  border:none;border-radius:14px;
+  background:linear-gradient(90deg,#00ff88,#00d977);
+  color:#08251a;font-weight:800;letter-spacing:.2px;
+  cursor:pointer;
+  transition:transform .08s ease, filter .2s ease;
+  box-shadow:0 12px 32px rgba(0,255,120,.28);
+}
+.btn:hover{filter:brightness(.97)}
+.btn:active{transform:translateY(1px)}
+
+/* футер/ссылка */
+.footer{margin-top:10px;font-size:14px;color:#aaa}
+.link{color:#19ff98;text-decoration:none;font-weight:700}
+.link:hover{text-decoration:underline}
+
+/* адаптив */
+@media (max-width:920px){
+  .auth-card{grid-template-columns:1fr;height:auto}
+  .auth-media{min-height:260px}   /* высота видео на мобилке */
+  .auth-form{padding-block:28px 32px}
+}
+
+/* ===== скрываем белую полосу прокрутки у формы ===== */
+.auth-form {
+  scrollbar-width: none;      /* Firefox */
+  -ms-overflow-style: none;   /* IE и Edge */
+}
+
+.auth-form::-webkit-scrollbar {
+  display: none;              /* Chrome, Safari, Opera */
+}

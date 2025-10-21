@@ -1,0 +1,179 @@
+<!-- /HabitTrack/profile.html -->
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <style>
+  #particles-js{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .navbar,.profile-wrap{position:relative;z-index:2}
+</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HabitTrack — Редагування профілю</title>
+  <link rel="stylesheet" href="style/main.css" />
+  <link rel="stylesheet" href="style/profile.css" />
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+</head>
+<body>
+
+<header class="navbar glass">
+  <div class="logo">HabitTrack</div>
+  <nav class="nav-links">
+    <a href="main.html">Головна</a>
+    <a href="#about">Про нас</a>
+    <a href="#features">Функції</a>
+    <a href="#contact">Контакти</a>
+  </nav>
+  <div class="auth-buttons">
+    <a href="login.html" class="btn btn-outline">Увійти</a>
+    <a href="register.html" class="btn btn-fill">Зареєструватися</a>
+  </div>
+</header>
+
+
+  <main class="profile-wrap">
+    <section class="profile-card glass">
+      <aside class="profile-side">
+        <div class="avatar-wrap">
+          <img id="avatarPreview" src="https://api.dicebear.com/7.x/identicon/svg?seed=HabitUser" alt="Аватар користувача" />
+          <label class="btn-outline file-label">
+            Завантажити аватар
+            <input id="avatarInput" type="file" accept="image/*" hidden />
+          </label>
+        </div>
+
+        <div class="profile-meta">
+          <div class="meta-item">
+            <span class="meta-k">12</span>
+            <span class="meta-l">звичок</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-k">86%</span>
+            <span class="meta-l">стрик</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-k">214</span>
+            <span class="meta-l">днів разом</span>
+          </div>
+        </div>
+
+        <div class="profile-badges">
+          <span class="badge">#раннійптах</span>
+          <span class="badge">#фітнес</span>
+          <span class="badge">#фокус</span>
+        </div>
+      </aside>
+
+      <form class="profile-form" id="profileForm" action="#" method="post">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="fullName">Ім'я та прізвище</label>
+            <input class="control" type="text" id="fullName" name="fullName" placeholder="Ім'я Прізвище" required>
+          </div>
+
+          <div class="form-group">
+            <label for="username">Нікнейм</label>
+            <div class="prefixed">
+              <span>@</span>
+              <input class="control" type="text" id="username" name="username" placeholder="username" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Ел. пошта</label>
+            <input class="control" type="email" id="email" name="email" placeholder="you@example.com" required>
+          </div>
+
+          <div class="form-group">
+            <label for="location">Місто</label>
+            <input class="control" type="text" id="location" name="location" placeholder="Київ">
+          </div>
+
+          <div class="form-group form-span-2">
+            <label for="bio">Біо <small id="bioCount">0/160</small></label>
+            <textarea class="control" id="bio" name="bio" rows="4" maxlength="160" placeholder="Коротко про себе..."></textarea>
+          </div>
+
+          <div class="form-group form-span-2">
+            <label for="website">Сайт</label>
+            <input class="control" type="url" id="website" name="website" placeholder="https://">
+          </div>
+
+          <details class="form-span-2 pw-toggle">
+            <summary>Змінити пароль</summary>
+            <div class="pw-grid">
+              <div class="form-group">
+                <label for="currentPassword">Поточний пароль</label>
+                <input class="control" type="password" id="currentPassword" name="currentPassword" autocomplete="current-password">
+              </div>
+              <div class="form-group">
+                <label for="newPassword">Новий пароль</label>
+                <input class="control" type="password" id="newPassword" name="newPassword" autocomplete="new-password">
+              </div>
+              <div class="form-group">
+                <label for="confirmPassword">Підтвердьте пароль</label>
+                <input class="control" type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password">
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-outline" id="cancelBtn">Скасувати</button>
+          <button type="submit" class="btn-primary">Зберегти зміни</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <div id="particles-js"></div>
+
+  <script>
+    particlesJS("particles-js", {
+      "particles": {
+        "number": {"value": 45},
+        "color": {"value": "#00ff88"},
+        "shape": {"type": "circle"},
+        "opacity": {"value": 0.35},
+        "size": {"value": 2, "random": true},
+        "line_linked": {"enable": true, "distance": 140, "color": "#00ff88", "opacity": 0.25, "width": 1},
+        "move": {"enable": true, "speed": 1.6}
+      },
+      "interactivity": {
+        "events": {"onhover": {"enable": true, "mode": "repulse"}},
+        "modes": {"repulse": {"distance": 120}}
+      }
+    });
+
+    const avatarInput = document.getElementById('avatarInput');
+    const avatarPreview = document.getElementById('avatarPreview');
+    avatarInput?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      avatarPreview.src = url;
+    });
+
+    const bio = document.getElementById('bio');
+    const bioCount = document.getElementById('bioCount');
+    const updateCount = () => bioCount.textContent = `${bio.value.length}/160`;
+    bio?.addEventListener('input', updateCount);
+    updateCount();
+
+    document.getElementById('profileForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const np = document.getElementById('newPassword').value;
+      const cp = document.getElementById('confirmPassword').value;
+      if (np || cp) {
+        if (np.length < 8) return alert('Новий пароль має містити щонайменше 8 символів');
+        if (np !== cp) return alert('Паролі не співпадають');
+      }
+      alert('✅ Зміни збережено (демо)');
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+      window.location.href = 'main.html';
+    });
+  </script>
+
+</body>
+</html>

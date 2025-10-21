@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HabitTrack — Реєстрація</title>
+  <link rel="stylesheet" href="style/register.css" />
+</head>
+<body>
+
+  <main class="auth-wrap">
+    <section class="auth-card">
+
+      <!-- Левая часть с видео — заполняет панель без пустот -->
+      <div class="auth-media">
+        <video class="auth-video" autoplay muted loop playsinline preload="metadata">
+          <source src="assets/videos/pulse.mp4" type="video/mp4" />
+          Ваш браузер не підтримує відео.
+        </video>
+        <div class="media-overlay"></div>
+        <div class="media-caption">
+          <h2>HabitTrack</h2>
+          <p>Створіть звички, що працюють</p>
+        </div>
+      </div>
+
+      <!-- Правая часть: форма регистрации -->
+      <div class="auth-form">
+        <header class="brand">
+          <div class="logo-dot"></div>
+          <h1>Створити акаунт</h1>
+        </header>
+
+        <p class="subtitle">Заповніть форму для реєстрації</p>
+
+        <form id="registerForm" class="form">
+          <label class="label" for="fullname">Ім'я та прізвище</label>
+          <input class="input" type="text" id="fullname" name="fullname" placeholder="Іван Петренко" required />
+
+          <label class="label" for="email">Email</label>
+          <input class="input" type="email" id="email" name="email" placeholder="you@example.com" required />
+
+          <label class="label" for="password">Пароль</label>
+          <input class="input" type="password" id="password" name="password" placeholder="Мінімум 8 символів" required />
+
+          <label class="label" for="confirm">Підтвердження пароля</label>
+          <input class="input" type="password" id="confirm" name="confirm" placeholder="Повторіть пароль" required />
+
+          <label class="checkbox">
+            <input type="checkbox" id="agree" required />
+            <span>Я погоджуюсь з умовами використання</span>
+          </label>
+
+          <div class="msg error" id="errorMsg"></div>
+          <div class="msg success" id="successMsg">Акаунт створено! Тепер увійдіть.</div>
+
+          <!-- фиксированная зона действий, чтобы кнопка всегда была видна -->
+          <div class="form-actions">
+            <button class="btn" type="submit">Створити акаунт</button>
+            <p class="footer">
+              Вже маєте акаунт?
+              <a class="link" href="login.html">Увійти</a>
+            </p>
+          </div>
+        </form>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById('registerForm');
+    const errorMsg = document.getElementById('errorMsg');
+    const successMsg = document.getElementById('successMsg');
+    const fullname = document.getElementById('fullname');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const confirm = document.getElementById('confirm');
+    const agree = document.getElementById('agree');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      errorMsg.style.display = 'none';
+      successMsg.style.display = 'none';
+
+      if (!fullname.value.trim()) {
+        errorMsg.textContent = "Вкажіть ім'я та прізвище";
+        errorMsg.style.display = 'block';
+        return;
+      }
+      if (!email.value.includes('@')) {
+        errorMsg.textContent = 'Некоректний email';
+        errorMsg.style.display = 'block';
+        return;
+      }
+      if (password.value.length < 8) {
+        errorMsg.textContent = 'Пароль має містити мінімум 8 символів';
+        errorMsg.style.display = 'block';
+        return;
+      }
+      if (password.value !== confirm.value) {
+        errorMsg.textContent = 'Паролі не збігаються';
+        errorMsg.style.display = 'block';
+        return;
+      }
+      if (!agree.checked) {
+        errorMsg.textContent = 'Підтвердіть згоду з умовами';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      setTimeout(() => {
+        successMsg.style.display = 'block';
+        form.reset();
+      }, 300);
+    });
+  </script>
+</body>
+</html>
