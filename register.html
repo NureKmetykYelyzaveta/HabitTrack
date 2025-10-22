@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HabitTrack — Реєстрація</title>
   <link rel="stylesheet" href="style/register.css" />
+  <script src="js/auth.js"></script>
 </head>
 <body>
 
@@ -78,11 +79,12 @@
     const confirm = document.getElementById('confirm');
     const agree = document.getElementById('agree');
 
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       errorMsg.style.display = 'none';
       successMsg.style.display = 'none';
 
+      // Валідація
       if (!fullname.value.trim()) {
         errorMsg.textContent = "Вкажіть ім'я та прізвище";
         errorMsg.style.display = 'block';
@@ -109,10 +111,40 @@
         return;
       }
 
-      setTimeout(() => {
+      try {
+        // Показуємо індикатор завантаження
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Створюємо акаунт...';
+        submitBtn.disabled = true;
+
+        // Відправляємо дані на сервер
+        const userData = {
+          username: fullname.value.trim(),
+          email: email.value.trim(),
+          password: password.value,
+          avatarUrl: null
+        };
+
+        await authService.register(userData);
+        
+        // Успішна реєстрація
         successMsg.style.display = 'block';
         form.reset();
-      }, 300);
+        
+        // Перенаправляємо на сторінку входу через 2 секунди
+        setTimeout(() => {
+          window.location.href = 'login.html';
+        }, 2000);
+
+      } catch (error) {
+        errorMsg.textContent = error.message;
+        errorMsg.style.display = 'block';
+      } finally {
+        // Відновлюємо кнопку
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+      }
     });
   </script>
 </body>

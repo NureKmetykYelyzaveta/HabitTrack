@@ -8,6 +8,7 @@
         public string Password { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public string Role { get; set; } = "User";
-        public string? AvatarUrl { get; set; }
+        public byte[]? AvatarImage { get; set; }
+        public string? AvatarContentType { get; set; }
     }
 }

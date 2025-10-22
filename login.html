@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HabitTrack — Вхід</title>
   <link rel="stylesheet" href="style/login.css" />
+  <script src="js/auth.js"></script>
 </head>
 <body>
 
@@ -58,22 +59,44 @@
     const errorMsg = document.getElementById('errorMsg');
     const successMsg = document.getElementById('successMsg');
 
-    loginBtn.addEventListener('click', () => {
+    loginBtn.addEventListener('click', async () => {
       const email = emailInput.value.trim();
       const password = passwordInput.value.trim();
       errorMsg.style.display = 'none';
       successMsg.style.display = 'none';
 
       if (email === '' || password === '') {
+        errorMsg.textContent = 'Будь ласка, заповніть усі поля';
         errorMsg.style.display = 'block';
         return;
       }
 
-      setTimeout(() => {
+      try {
+        // Показуємо індикатор завантаження
+        loginBtn.textContent = 'Входимо...';
+        loginBtn.disabled = true;
+
+        // Відправляємо запит на сервер
+        await authService.login(email, password);
+        
+        // Успішний вхід
         successMsg.style.display = 'block';
         emailInput.value = '';
         passwordInput.value = '';
-      }, 500);
+        
+        // Перенаправляємо на головну сторінку через 1 секунду
+        setTimeout(() => {
+          window.location.href = 'main.html';
+        }, 1000);
+
+      } catch (error) {
+        errorMsg.textContent = error.message;
+        errorMsg.style.display = 'block';
+      } finally {
+        // Відновлюємо кнопку
+        loginBtn.textContent = 'Увійти';
+        loginBtn.disabled = false;
+      }
     });
   </script>
 </body>

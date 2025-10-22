@@ -8,10 +8,11 @@
 </style>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HabitTrack — Редагування профілю</title>
+  <title>HabitTrack — Профіль</title>
   <link rel="stylesheet" href="style/main.css" />
   <link rel="stylesheet" href="style/profile.css" />
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script src="js/auth.js"></script>
 </head>
 <body>
 
@@ -23,9 +24,8 @@
     <a href="#features">Функції</a>
     <a href="#contact">Контакти</a>
   </nav>
-  <div class="auth-buttons">
-    <a href="login.html" class="btn btn-outline">Увійти</a>
-    <a href="register.html" class="btn btn-fill">Зареєструватися</a>
+  <div class="auth-buttons" id="authButtons">
+    <!-- Буде заповнено JavaScript -->
   </div>
 </header>
 
@@ -35,10 +35,13 @@
       <aside class="profile-side">
         <div class="avatar-wrap">
           <img id="avatarPreview" src="https://api.dicebear.com/7.x/identicon/svg?seed=HabitUser" alt="Аватар користувача" />
-          <label class="btn-outline file-label">
-            Завантажити аватар
-            <input id="avatarInput" type="file" accept="image/*" hidden />
-          </label>
+          <div id="avatarActions">
+            <button class="btn-outline" id="editProfileBtn">Редагувати профіль</button>
+            <label class="btn-outline file-label" id="uploadAvatarBtn" style="display: none;">
+              Завантажити аватар
+              <input id="avatarInput" type="file" accept="image/*" hidden />
+            </label>
+          </div>
         </div>
 
         <div class="profile-meta">
@@ -63,7 +66,17 @@
         </div>
       </aside>
 
-      <form class="profile-form" id="profileForm" action="#" method="post">
+      <!-- Звичайний профіль (тільки перегляд) -->
+      <div class="profile-view" id="profileView">
+        <div class="profile-info">
+          <h2 id="viewUsername">Username</h2>
+          <p id="viewEmail">email@example.com</p>
+          <p class="join-date">Приєднався: <span id="viewJoinDate">1 січня 2024</span></p>
+        </div>
+      </div>
+
+      <!-- Форма редагування профілю -->
+      <form class="profile-form" id="profileForm" action="#" method="post" style="display: none;">
         <div class="form-grid">
           <div class="form-group">
             <label for="fullName">Ім'я та прізвище</label>
@@ -83,20 +96,6 @@
             <input class="control" type="email" id="email" name="email" placeholder="you@example.com" required>
           </div>
 
-          <div class="form-group">
-            <label for="location">Місто</label>
-            <input class="control" type="text" id="location" name="location" placeholder="Київ">
-          </div>
-
-          <div class="form-group form-span-2">
-            <label for="bio">Біо <small id="bioCount">0/160</small></label>
-            <textarea class="control" id="bio" name="bio" rows="4" maxlength="160" placeholder="Коротко про себе..."></textarea>
-          </div>
-
-          <div class="form-group form-span-2">
-            <label for="website">Сайт</label>
-            <input class="control" type="url" id="website" name="website" placeholder="https://">
-          </div>
 
           <details class="form-span-2 pw-toggle">
             <summary>Змінити пароль</summary>
@@ -128,6 +127,9 @@
   <div id="particles-js"></div>
 
   <script>
+    let currentUser = null;
+
+    // Ініціалізація particles.js
     particlesJS("particles-js", {
       "particles": {
         "number": {"value": 45},
@@ -144,6 +146,70 @@
       }
     });
 
+    // Перевірка авторизації при завантаженні сторінки
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!authService.checkPageAuth()) return;
+
+      currentUser = authService.getCurrentUser();
+      
+      // Оновлюємо навігацію
+      const authButtons = document.getElementById('authButtons');
+      authButtons.innerHTML = `
+        <span class="user-greeting">Привіт, ${currentUser.username}!</span>
+        <a href="main.html" class="btn btn-outline">Головна</a>
+        <button onclick="authService.logout()" class="btn btn-fill">Вийти</button>
+      `;
+
+      // Завантажуємо дані користувача
+      await loadUserData();
+    });
+
+    // Завантаження даних користувача
+    async function loadUserData() {
+      try {
+        const userData = await authService.getUserData(currentUser.userId);
+        
+        // Оновлюємо звичайний профіль
+        document.getElementById('viewUsername').textContent = userData.username || '';
+        document.getElementById('viewEmail').textContent = userData.email || '';
+        
+        // Форматуємо дату приєднання
+        const joinDate = new Date(userData.createdAt);
+        const formattedDate = joinDate.toLocaleDateString('uk-UA', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        document.getElementById('viewJoinDate').textContent = formattedDate;
+        
+        // Заповнюємо форму редагування
+        document.getElementById('fullName').value = userData.username || '';
+        document.getElementById('username').value = userData.username || '';
+        document.getElementById('email').value = userData.email || '';
+        
+        // Оновлюємо аватар (будуємо абсолютний URL до бекенду, якщо потрібно)
+        if (userData.avatarUrl) {
+          let avatarUrl = userData.avatarUrl;
+          try {
+            // Якщо від бекенду прийшов відносний шлях (наприклад "/api/user/..."),
+            // додаємо базовий URL до API (http://localhost:5000)
+            if (avatarUrl.startsWith('/')) {
+              const apiBase = authService.apiBaseUrl.replace(/\/api\/?$/, '');
+              avatarUrl = apiBase + avatarUrl;
+            }
+          } catch (e) {
+            console.error('Error building avatar URL', e);
+          }
+          document.getElementById('avatarPreview').src = avatarUrl;
+        }
+
+      } catch (error) {
+        console.error('Помилка завантаження даних:', error);
+        authService.showError('Помилка завантаження профілю');
+      }
+    }
+
+    // Обробка завантаження аватара
     const avatarInput = document.getElementById('avatarInput');
     const avatarPreview = document.getElementById('avatarPreview');
     avatarInput?.addEventListener('change', (e) => {
@@ -153,25 +219,89 @@
       avatarPreview.src = url;
     });
 
-    const bio = document.getElementById('bio');
-    const bioCount = document.getElementById('bioCount');
-    const updateCount = () => bioCount.textContent = `${bio.value.length}/160`;
-    bio?.addEventListener('input', updateCount);
-    updateCount();
+    // Функції для перемикання між режимами
+    function showEditMode() {
+      document.getElementById('profileView').style.display = 'none';
+      document.getElementById('profileForm').style.display = 'block';
+      document.getElementById('editProfileBtn').style.display = 'none';
+      document.getElementById('uploadAvatarBtn').style.display = 'block';
+    }
 
-    document.getElementById('profileForm').addEventListener('submit', (e) => {
+    function showViewMode() {
+      document.getElementById('profileView').style.display = 'block';
+      document.getElementById('profileForm').style.display = 'none';
+      document.getElementById('editProfileBtn').style.display = 'block';
+      document.getElementById('uploadAvatarBtn').style.display = 'none';
+    }
+
+    // Обробка кнопки редагування профілю
+    document.getElementById('editProfileBtn').addEventListener('click', showEditMode);
+
+    // Обробка відправки форми
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const np = document.getElementById('newPassword').value;
-      const cp = document.getElementById('confirmPassword').value;
-      if (np || cp) {
-        if (np.length < 8) return alert('Новий пароль має містити щонайменше 8 символів');
-        if (np !== cp) return alert('Паролі не співпадають');
+      
+      const formData = {
+        username: document.getElementById('fullName').value.trim(),
+        email: document.getElementById('email').value.trim()
+      };
+
+      // Якщо користувач вибрав новий файл у input, завантажуємо його окремим запитом
+      const fileInput = document.getElementById('avatarInput');
+      if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        try {
+          await authService.uploadAvatar(currentUser.userId, fileInput.files[0]);
+        } catch (err) {
+          authService.showError('Не вдалося завантажити аватар');
+          return;
+        }
       }
-      alert('✅ Зміни збережено (демо)');
+
+      const currentPassword = document.getElementById('currentPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      try {
+        // Оновлюємо профіль
+        await authService.updateProfile(currentUser.userId, formData);
+        
+        // Якщо змінюється пароль
+        if (newPassword || confirmPassword) {
+          if (newPassword.length < 8) {
+            authService.showError('Новий пароль має містити щонайменше 8 символів');
+            return;
+          }
+          if (newPassword !== confirmPassword) {
+            authService.showError('Паролі не співпадають');
+            return;
+          }
+          if (!currentPassword) {
+            authService.showError('Введіть поточний пароль');
+            return;
+          }
+          
+          await authService.changePassword(currentUser.userId, currentPassword, newPassword);
+        }
+
+        authService.showSuccess('✅ Зміни збережено успішно!');
+        
+        // Очищуємо поля паролів
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        
+        // Повертаємося до режиму перегляду та оновлюємо дані
+        await loadUserData();
+        showViewMode();
+
+      } catch (error) {
+        authService.showError(error.message);
+      }
     });
 
+    // Обробка кнопки скасування
     document.getElementById('cancelBtn').addEventListener('click', () => {
-      window.location.href = 'main.html';
+      showViewMode();
     });
   </script>
 

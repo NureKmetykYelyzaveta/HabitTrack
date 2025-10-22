@@ -33,7 +33,7 @@ namespace HabitTrack.Controllers
                 Username = dto.Username,
                 Email = dto.Email,
                 Password = PasswordHasher.HashPassword(dto.Password),
-                AvatarUrl = dto.AvatarUrl
+                // avatar will be uploaded separately via /api/user/{id}/avatar
             };
 
             _context.Users.Add(user);
@@ -49,18 +49,17 @@ namespace HabitTrack.Controllers
             if (user == null)
                 return Unauthorized("Користувача не знайдено.");
 
-            var hashedInput = PasswordHasher.HashPassword(dto.Password);
-
-            if (user.Password != hashedInput)
+            if (!PasswordHasher.VerifyPassword(dto.Password, user.Password))
                 return Unauthorized("Неправильний пароль.");
 
+            var avatarUrl = user.AvatarImage != null ? $"/api/user/{user.UserId}/avatar" : null;
             return Ok(new
             {
                 user.UserId,
                 user.Username,
                 user.Email,
                 user.Role,
-                user.AvatarUrl
+                AvatarUrl = avatarUrl
             });
         }
     }

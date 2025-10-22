@@ -1,4 +1,4 @@
-CREATE TABLE Users (
+CREATE TABLE users (
     UserId UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     Username VARCHAR(50) NOT NULL,
     Email VARCHAR(150) NOT NULL UNIQUE,

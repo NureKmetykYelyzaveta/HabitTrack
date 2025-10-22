@@ -6,6 +6,7 @@
   <title>HabitTrack — Головна</title>
   <link rel="stylesheet" href="style/main.css" />
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script src="js/auth.js"></script>
 </head>
 <body>
 
@@ -18,9 +19,8 @@
       <a href="#features">Функції</a>
       <a href="#contact">Контакти</a>
     </nav>
-    <div class="auth-buttons">
-      <a href="login.html" class="btn btn-outline">Увійти</a>
-      <a href="register.html" class="btn btn-fill">Зареєструватися</a>
+    <div class="auth-buttons" id="authButtons">
+      <!-- Буде заповнено JavaScript залежно від статусу авторизації -->
     </div>
   </header>
 
@@ -90,6 +90,7 @@
   </footer>
 
   <script>
+    // Ініціалізація particles.js
     particlesJS("particles-js", {
       "particles": {
         "number": {"value": 80},
@@ -106,6 +107,25 @@
           "onclick": {"enable": true, "mode": "push"}
         },
         "modes": {"repulse": {"distance": 100}, "push": {"particles_nb": 4}}
+      }
+    });
+
+    // Перевірка авторизації та оновлення навігації
+    document.addEventListener('DOMContentLoaded', () => {
+      const authButtons = document.getElementById('authButtons');
+      
+      if (authService.isAuthenticated()) {
+        const user = authService.getCurrentUser();
+        authButtons.innerHTML = `
+          <span class="user-greeting">Привіт, ${user.username}!</span>
+          <a href="profile.html" class="btn btn-outline">Профіль</a>
+          <button onclick="authService.logout()" class="btn btn-fill">Вийти</button>
+        `;
+      } else {
+        authButtons.innerHTML = `
+          <a href="login.html" class="btn btn-outline">Увійти</a>
+          <a href="register.html" class="btn btn-fill">Зареєструватися</a>
+        `;
       }
     });
   </script>

@@ -20,9 +20,27 @@ namespace HabitTrack
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            // Додаємо CORS для роботи з фронтендом
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
             builder.Services.AddControllers();
 
             var app = builder.Build();
+
+            // Автоматично створюємо таблиці при запуску
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                context.Database.EnsureCreated();
+            }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -32,6 +50,9 @@ namespace HabitTrack
             }
 
             app.UseHttpsRedirection();
+
+            // Використовуємо CORS перед авторизацією
+            app.UseCors("AllowFrontend");
 
             app.UseAuthorization();
 
