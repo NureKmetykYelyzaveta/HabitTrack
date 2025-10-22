@@ -1,0 +1,68 @@
+# Ignore Visual Studio temporary files, build results, and
+# user-specific files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+
+# Visual Studio Code settings
+.vscode/
+
+# Rider
+.idea/
+
+# ASP.NET Core static files
+wwwroot/avatars/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Dotnet EF migrations output
+*.sql
+
+# Secret files
+appsettings.Development.json
+
+# Node / NPM
+node_modules/
+
+# Python cache (for simple http server tests)
+__pycache__/
+*.pyc
+
+# JetBrains
+*.iml
+
+# Temporary files
+*.tmp
+*~
+
+# local environment files
+.env
+
+# JetBrains Rider project files
+.idea/
+
+# nuget packages
+*.nupkg
+
+# User-specific files
+*.user
+
+# Misc
+coverage/
+
+# Ignore database files if any local dev DB present
+*.db
+
+# Exclude .DS_Store
+.DS_Store
