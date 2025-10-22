@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HabitTrack — Вхід</title>
-  <link rel="stylesheet" href="style/login.css" />
-  <script src="js/auth.js"></script>
+  <link rel="stylesheet" href="./style/login.css" />
+  <script src="./js/auth.js"></script>
 </head>
 <body>
 
@@ -15,7 +15,7 @@
       <!-- Ліва частина з відео -->
       <div class="auth-media">
         <video class="auth-video" autoplay muted loop playsinline preload="metadata">
-          <source src="assets/videos/pulse.mp4" type="video/mp4" />
+          <source src="./assets/videos/pulse.mp4" type="video/mp4" />
           Ваш браузер не підтримує відео.
         </video>
         <div class="media-overlay"></div>
@@ -45,7 +45,7 @@
         <div class="success" id="successMsg">Вхід виконано успішно!</div>
 
         <div class="footer">
-          Немає акаунта? <a href="register.html">Зареєструватися</a>
+          Немaє акаунта? <a href="./register.html">Зареєструватися</a>
         </div>
       </div>
 
@@ -86,7 +86,7 @@
         
         // Перенаправляємо на головну сторінку через 1 секунду
         setTimeout(() => {
-          window.location.href = 'main.html';
+          window.location.href = './main.html';
         }, 1000);
 
       } catch (error) {

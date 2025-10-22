@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HabitTrack — Головна</title>
-  <link rel="stylesheet" href="style/main.css" />
+  <link rel="stylesheet" href="./style/main.css" />
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-  <script src="js/auth.js"></script>
+  <script src="./js/auth.js"></script>
 </head>
 <body>
 
@@ -118,13 +118,13 @@
         const user = authService.getCurrentUser();
         authButtons.innerHTML = `
           <span class="user-greeting">Привіт, ${user.username}!</span>
-          <a href="profile.html" class="btn btn-outline">Профіль</a>
+          <a href="./profile.html" class="btn btn-outline">Профіль</a>
           <button onclick="authService.logout()" class="btn btn-fill">Вийти</button>
         `;
       } else {
         authButtons.innerHTML = `
-          <a href="login.html" class="btn btn-outline">Увійти</a>
-          <a href="register.html" class="btn btn-fill">Зареєструватися</a>
+          <a href="./login.html" class="btn btn-outline">Увійти</a>
+          <a href="./register.html" class="btn btn-fill">Зареєструватися</a>
         `;
       }
     });
