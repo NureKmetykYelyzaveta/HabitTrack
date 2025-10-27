@@ -23,17 +23,33 @@ namespace HabitTrack.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterUserDto dto)
         {
-            if (_context.Users.Any(u => u.Email == dto.Email))
+            // 1. Перевірка чи пошта вже існує
+            if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
             {
-                return BadRequest("Email вже зареєстрований.");
+                return BadRequest(new { message = "Email вже зареєстрований." });
             }
 
+            // 2. Перевірка пароля
+            if (string.IsNullOrWhiteSpace(dto.Password) || dto.Password.Length < 8)
+            {
+                return BadRequest(new { message = "Пароль має бути мінімум 8 символів." });
+            }
+            if (!dto.Password.Any(char.IsUpper))
+            {
+                return BadRequest(new { message = "Пароль має містити хоча б одну велику літеру." });
+            }
+            if (!dto.Password.Any(char.IsDigit))
+            {
+                return BadRequest(new { message = "Пароль має містити хоча б одну цифру." });
+            }
+
+            // 3. Створення користувача
             var user = new User
             {
                 Username = dto.Username,
                 Email = dto.Email,
                 Password = PasswordHasher.HashPassword(dto.Password),
-                // avatar will be uploaded separately via /api/user/{id}/avatar
+                // avatar буде завантажуватись окремо
             };
 
             _context.Users.Add(user);
@@ -43,7 +59,7 @@ namespace HabitTrack.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginDto dto)
+        public async Task<IActionResult> Login(LoginDto dto, [FromServices] JwtService jwtService)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
             if (user == null)
@@ -52,14 +68,18 @@ namespace HabitTrack.Controllers
             if (!PasswordHasher.VerifyPassword(dto.Password, user.Password))
                 return Unauthorized("Неправильний пароль.");
 
+            var token = jwtService.GenerateToken(user);
+
             var avatarUrl = user.AvatarImage != null ? $"/api/user/{user.UserId}/avatar" : null;
+
             return Ok(new
             {
                 user.UserId,
                 user.Username,
                 user.Email,
                 user.Role,
-                AvatarUrl = avatarUrl
+                AvatarUrl = avatarUrl,
+                Token = token
             });
         }
     }
