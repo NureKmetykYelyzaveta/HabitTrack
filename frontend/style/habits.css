@@ -1,0 +1,253 @@
+/* Основна секція */
+.habits-section {
+  margin-top: 160px;
+  text-align: center;
+}
+
+/* Заголовок і підпис */
+.habits-section h1 {
+  color: #00ff88;
+  font-size: 32px;
+  text-shadow: 0 0 10px rgba(0, 255, 120, 0.4);
+}
+
+.subtitle {
+  color: #c9c9c9;
+  margin-bottom: 40px;
+  line-height: 1.6;
+}
+
+/* Кнопка додавання */
+#addHabitBtn {
+  margin-top: 10px;
+  margin-bottom: 40px;
+}
+
+/* Селектор категорій */
+.category-filter {
+  display: none;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-left: 12%;
+}
+
+.category-filter.visible {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.category-filter label {
+  color: #e0e0e0;
+  font-weight: bold;
+}
+
+.category-filter select {
+  background: rgba(20, 20, 20, 0.9);
+  border: 1px solid rgba(0, 255, 120, 0.4);
+  border-radius: 10px;
+  padding: 8px 14px;
+  color: #e0e0e0;
+  outline: none;
+  transition: 0.25s ease;
+}
+
+.category-filter select:hover,
+.category-filter select:focus {
+  border-color: #00ff88;
+  box-shadow: 0 0 8px rgba(0, 255, 120, 0.4);
+}
+
+/* Контейнер звичок */
+.habits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+  margin-top: 50px;
+}
+
+/* Картки звичок */
+.habit-card {
+  padding: 24px;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+.habit-card p {
+  margin: 6px 0;
+  color: #d0d0d0;
+  text-align: left; 
+}
+
+.habit-card .btn {
+  display: inline-block;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.habit-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 30px rgba(0, 255, 120, 0.25);
+}
+
+.habit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.habit-header h3 {
+  color: #00ff88;
+  font-size: 20px;
+  text-shadow: 0 0 6px rgba(0, 255, 120, 0.4);
+}
+
+.habit-actions button {
+  background: transparent;
+  border: none;
+  color: #e0e0e0;
+  font-size: 18px;
+  cursor: pointer;
+  margin-left: 6px;
+  transition: color 0.2s ease;
+}
+
+.habit-actions button:hover {
+  color: #00ff88;
+}
+
+/* Прогрес бар */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00b060, #00ff88);
+  width: 0%;
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+
+.progress-info {
+  margin-top: 6px;
+  color: #aaa;
+  font-size: 14px;
+}
+
+/* Модальне вікно */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  padding: 30px;
+  border-radius: 16px;
+  width: 360px;
+  text-align: left;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #00ff88;
+}
+
+.modal-content label {
+  display: block;
+  color: #e0e0e0;
+  margin-top: 10px;
+  font-weight: 500;
+}
+
+.modal-content input,
+.modal-content select {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 255, 120, 0.3);
+  background: rgba(20, 20, 20, 0.85);
+  color: #e0e0e0;
+  outline: none;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-content input:focus,
+.modal-content select:focus {
+  border-color: #00ff88;
+  box-shadow: 0 0 8px rgba(0, 255, 120, 0.4);
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+/* Плавна анімація */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Поле для складних звичок */
+#complexSettings {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(0, 255, 120, 0.05);
+  border: 1px solid rgba(0, 255, 120, 0.1);
+}
+
+#complexSettings label {
+  color: #bfbfbf;
+  font-size: 14px;
+}
+
+#complexSettings input {
+  width: 100%;
+  margin-top: 6px;
+}
+
+/* Сторінка з архівами */
+.archive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+  margin-top: 50px;
+}
+
+.archive-grid p {
+  text-align: center;
+  color: #bfbfbf;
+}
+
+
+.archive-grid .habit-card {
+  text-align: left; 
+  padding-left: 20px; 
+}
+
+.archive-grid .habit-card p {
+  text-align: left;
+  margin: 6px 0;
+  color: #d0d0d0;
+}

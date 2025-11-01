@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HabitTrack — Архів звичок</title>
+  <link rel="stylesheet" href="./style/main.css" />
+  <link rel="stylesheet" href="./style/habits.css" />
+</head>
+
+<body>
+  <!-- Навігація -->
+  <header class="navbar glass">
+    <div class="logo">HabitTrack</div>
+    <nav class="nav-links">
+      <a href="./main.html">Головна</a>
+      <a href="./habits.html">Звички</a>
+      <a href="#stats">Статистика</a>
+      <a href="./archive.html" class="active">Архів</a>
+    </nav>
+    <div class="auth-buttons" id="authButtons"></div>
+  </header>
+
+  <!-- Основна секція -->
+  <main class="section glass habits-section">
+    <h1>Архів звичок</h1>
+    <p class="subtitle">
+      Тут зберігаються твої архівовані звички. Ти можеш їх відновити або повністю видалити.
+    </p>
+
+    <div class="archive-grid" id="archiveList"></div>
+  </main>
+
+  <!-- Підвал -->
+  <footer class="footer glass">
+    <p>© 2025 HabitTrack. Усі права захищені.</p>
+  </footer>
+
+  <!-- JavaScript -->
+  <script src="./js/auth.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const archiveList = document.getElementById("archiveList");
+      let habits = JSON.parse(localStorage.getItem("habits")) || [];
+
+      const saveHabits = () => localStorage.setItem("habits", JSON.stringify(habits));
+
+      const renderArchive = () => {
+        archiveList.innerHTML = "";
+
+        const archived = habits.filter(h => h.archived);
+
+        if (archived.length === 0) {
+          archiveList.innerHTML = "<p>Архів порожній 💤</p>";
+          return;
+        }
+
+        archived.forEach(habit => {
+          const card = document.createElement("div");
+          card.className = "habit-card glass";
+          card.innerHTML = `
+            <div class="habit-header">
+              <h3>${habit.name}</h3>
+              <div class="habit-actions">
+                <button title="Відновити" onclick="restoreHabit('${habit.id}')">♻️</button>
+                <button title="Видалити" onclick="deleteHabit('${habit.id}')">🗑️</button>
+              </div>
+            </div>
+            <p>Категорія: ${habit.type}</p>
+            <p>Ціль: ${habit.goal} разів/тиждень</p>
+            ${habit.complex ? `<p>Складна звичка: ${habit.timesPerDay} раз(и) на день</p>` : ""}
+          `;
+          archiveList.appendChild(card);
+        });
+      };
+
+      // Відновити звичку
+      window.restoreHabit = id => {
+        const h = habits.find(h => h.id === id);
+        if (h) {
+          h.archived = false;
+          saveHabits();
+          renderArchive();
+          alert(`Звичку "${h.name}" відновлено ✅`);
+        }
+      };
+
+      // Повністю видалити
+      window.deleteHabit = id => {
+        if (confirm("Видалити цю звичку назавжди?")) {
+          habits = habits.filter(h => h.id !== id);
+          saveHabits();
+          renderArchive();
+        }
+      };
+
+      renderArchive();
+    });
+
+    // Авторизація / навігація
+    document.addEventListener('DOMContentLoaded', () => {
+      const authButtons = document.getElementById('authButtons');
+      
+      if (authService.isAuthenticated()) {
+        const user = authService.getCurrentUser();
+        authButtons.innerHTML = `
+          <span class="user-greeting">Привіт, ${user.username}!</span>
+          <a href="./profile.html" class="btn btn-outline">Профіль</a>
+          <button onclick="authService.logout()" class="btn btn-fill">Вийти</button>
+        `;
+      } else {
+        authButtons.innerHTML = `
+          <a href="./login.html" class="btn btn-outline">Увійти</a>
+          <a href="./register.html" class="btn btn-fill">Зареєструватися</a>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>

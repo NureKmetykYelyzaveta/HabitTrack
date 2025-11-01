@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HabitTrack — Мої звички</title>
+  <link rel="stylesheet" href="./style/main.css" />
+  <link rel="stylesheet" href="./style/habits.css" />
+</head>
+
+<body>
+  <!-- Навігація -->
+  <header class="navbar glass">
+    <div class="logo">HabitTrack</div>
+    <nav class="nav-links">
+      <a href="./main.html">Головна</a>
+      <a href="./habits.html" class="active">Звички</a>
+      <a href="#stats">Статистика</a>
+      <a href="./archive.html" class="active">Архів</a>
+    </nav>
+    <div class="auth-buttons" id="authButtons"></div>
+  </header>
+
+  <!-- Основна секція -->
+  <main class="section glass habits-section">
+    <h1>Мої звички</h1>
+    <p class="subtitle">
+      Керуйте своїми звичками, відстежуйте прогрес і створюйте нові цілі для саморозвитку.
+    </p>
+
+    <button class="btn btn-fill" id="addHabitBtn">➕ Додати звичку</button>
+
+    <div class="category-filter" style="display: none;">
+      <label>Категорія:</label>
+      <select id="habitCategory">
+        <option value="all">Усі</option>
+        <option value="сон">Сон</option>
+        <option value="спорт">Спорт</option>
+        <option value="харчування">Харчування</option>
+        <option value="інше">Інше</option>
+      </select>
+    </div>
+
+    <!-- Контейнер зі звичками -->
+    <div class="habits-grid" id="habitsList"></div>
+  </main>
+
+  <!-- Модальне вікно створення/редагування -->
+  <div class="modal" id="habitModal">
+    <div class="modal-content glass">
+      <h2 id="modalTitle">Створити звичку</h2>
+      <form id="habitForm">
+        <input type="hidden" id="habitId" />
+
+        <label>Назва звички:</label>
+        <input type="text" id="habitName" required placeholder="Наприклад: Ранкова зарядка" />
+
+        <label>Категорія:</label>
+        <select id="habitType" required>
+          <option value="сон">Сон</option>
+          <option value="спорт">Спорт</option>
+          <option value="харчування">Харчування</option>
+          <option value="інше">Інше</option>
+        </select>
+
+        <label>Ціль (кількість днів):</label>
+        <input type="number" id="habitGoal" min="1" max="30" value="7" />
+
+        <label class="complex-label">
+          <input type="checkbox" id="isComplex" /> Складна звичка (кілька разів на день)
+        </label>
+
+        <div id="complexSettings" style="display: none;">
+          <label>Кількість виконань на день:</label>
+          <input type="number" id="timesPerDay" min="1" max="10" value="1" />
+        </div>
+
+        <div class="modal-buttons">
+          <button type="submit" class="btn btn-fill">Зберегти</button>
+          <button type="button" class="btn btn-outline" id="cancelBtn">Скасувати</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Підвал -->
+  <footer class="footer glass">
+    <p>© 2025 HabitTrack. Усі права захищені.</p>
+  </footer>
+
+  <!-- JavaScript -->
+  <script src="./js/auth.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const habitsList = document.getElementById("habitsList");
+      const modal = document.getElementById("habitModal");
+      const form = document.getElementById("habitForm");
+      const addHabitBtn = document.getElementById("addHabitBtn");
+      const cancelBtn = document.getElementById("cancelBtn");
+      const categoryFilter = document.getElementById("habitCategory");
+      const categoryFilterBlock = document.querySelector(".category-filter");
+      const complexCheckbox = document.getElementById("isComplex");
+      const complexSettings = document.getElementById("complexSettings");
+
+      let habits = JSON.parse(localStorage.getItem("habits")) || [];
+
+      const saveHabits = () => localStorage.setItem("habits", JSON.stringify(habits));
+
+      // Показ/приховування поля "кількість разів на день"
+      complexCheckbox.addEventListener("change", () => {
+        complexSettings.style.display = complexCheckbox.checked ? "block" : "none";
+      });
+
+      // Рендер звичок
+      const renderHabits = () => {
+        habitsList.innerHTML = "";
+        const filter = categoryFilter.value;
+        const filtered = filter === "all"
+          ? habits.filter(h => !h.archived)
+          : habits.filter(h => h.type === filter && !h.archived);
+
+        // Показ/приховування селектора категорій
+        if (habits && habits.length > 0 && habits.some(h => !h.archived)) {
+          categoryFilterBlock.style.display = "flex";
+          requestAnimationFrame(() => categoryFilterBlock.classList.add("visible"));
+        } else {
+          categoryFilterBlock.classList.remove("visible");
+          setTimeout(() => { categoryFilterBlock.style.display = "none"; }, 400);
+        }
+
+        if (filtered.length === 0) {
+          habitsList.innerHTML = "<p>Поки що немає звичок. Додай першу!</p>";
+          return;
+        }
+
+        filtered.forEach(habit => {
+          const card = document.createElement("div");
+          card.className = "habit-card glass";
+          card.innerHTML = `
+            <div class="habit-header">
+              <h3>${habit.name}</h3>
+              <div class="habit-actions">
+                <button title="Редагувати" onclick="editHabit('${habit.id}')">✏️</button>
+                <button title="Видалити" onclick="deleteHabit('${habit.id}')">🗑️</button>
+                <button title="Архівувати" onclick="archiveHabit('${habit.id}')">📦</button>
+              </div>
+            </div>
+            <p>Категорія: ${habit.type}</p>
+            <p>Ціль: ${habit.goal} разів/тиждень</p>
+            ${habit.complex ? `<p>Складна звичка: ${habit.timesPerDay} раз(и) на день</p>` : ""}
+            ${habit.complex ? `<p class="progress-info">Виконано сьогодні: ${habit.doneToday || 0}/${habit.timesPerDay}</p>` : ""}
+            <button class="btn btn-outline" onclick="markDone('${habit.id}')">✅ Виконано сьогодні</button>
+            <div class="progress-bar">
+              <div class="progress-bar-fill" style="width: ${habit.progress}%;"></div>
+            </div>
+          `;
+          habitsList.appendChild(card);
+        });
+      };
+
+      // Події
+      addHabitBtn.addEventListener("click", () => {
+        form.reset();
+        document.getElementById("habitId").value = "";
+        document.getElementById("modalTitle").textContent = "Створити звичку";
+        modal.style.display = "flex";
+        complexSettings.style.display = "none";
+      });
+
+      cancelBtn.addEventListener("click", () => (modal.style.display = "none"));
+
+      form.addEventListener("submit", e => {
+        e.preventDefault();
+        const id = document.getElementById("habitId").value || Date.now().toString();
+        const habit = {
+          id,
+          name: document.getElementById("habitName").value,
+          type: document.getElementById("habitType").value,
+          goal: parseInt(document.getElementById("habitGoal").value),
+          complex: document.getElementById("isComplex").checked,
+          timesPerDay: parseInt(document.getElementById("timesPerDay").value) || 1,
+          doneToday: 0,
+          progress: 0,
+          archived: false
+        };
+
+        const existingIndex = habits.findIndex(h => h.id === id);
+        if (existingIndex >= 0) habits[existingIndex] = habit;
+        else habits.push(habit);
+
+        saveHabits();
+        renderHabits();
+        modal.style.display = "none";
+      });
+
+      categoryFilter.addEventListener("change", renderHabits);
+
+      // Редагування
+      window.editHabit = id => {
+        const h = habits.find(h => h.id === id);
+        if (!h) return;
+        document.getElementById("habitId").value = h.id;
+        document.getElementById("habitName").value = h.name;
+        document.getElementById("habitType").value = h.type;
+        document.getElementById("habitGoal").value = h.goal;
+        document.getElementById("isComplex").checked = h.complex;
+        document.getElementById("timesPerDay").value = h.timesPerDay || 1;
+        complexSettings.style.display = h.complex ? "block" : "none";
+        document.getElementById("modalTitle").textContent = "Редагувати звичку";
+        modal.style.display = "flex";
+      };
+
+      // Видалення
+      window.deleteHabit = id => {
+        if (confirm("Видалити цю звичку?")) {
+          habits = habits.filter(h => h.id !== id);
+          saveHabits();
+          renderHabits();
+        }
+      };
+
+      // Виконання
+      window.markDone = id => {
+        const h = habits.find(h => h.id === id);
+        if (!h) return;
+
+        if (h.complex) {
+          h.doneToday = (h.doneToday || 0) + 1;
+          if (h.doneToday > h.timesPerDay) h.doneToday = h.timesPerDay;
+          h.progress = (h.doneToday / h.timesPerDay) * 100;
+        } else {
+          h.progress = 100;
+        }
+
+        saveHabits();
+        renderHabits();
+      };
+
+      // Архівування
+      window.archiveHabit = id => {
+        const h = habits.find(h => h.id === id);
+        if (h) {
+          h.archived = true;
+          saveHabits();
+          renderHabits();
+        }
+      };
+
+      renderHabits();
+    });
+
+    // Авторизація
+    document.addEventListener('DOMContentLoaded', () => {
+      const authButtons = document.getElementById('authButtons');
+      if (authService.isAuthenticated()) {
+        const user = authService.getCurrentUser();
+        authButtons.innerHTML = `
+          <span class="user-greeting">Привіт, ${user.username}!</span>
+          <a href="./profile.html" class="btn btn-outline">Профіль</a>
+          <button onclick="authService.logout()" class="btn btn-fill">Вийти</button>
+        `;
+      } else {
+        authButtons.innerHTML = `
+          <a href="./login.html" class="btn btn-outline">Увійти</a>
+          <a href="./register.html" class="btn btn-fill">Зареєструватися</a>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>
