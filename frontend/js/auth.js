@@ -1,7 +1,7 @@
 // auth.js - Модуль для роботи з аутентифікацією та API
 class AuthService {
     constructor() {
-        this.apiBaseUrl = 'http://localhost:5000/api';
+        this.apiBaseUrl = 'https://localhost:7015/api';
         this.sessionKey = 'habittrack_session';
         this.activityTimeout = 30 * 60 * 1000; // 30 хвилин
         this.checkInterval = 60 * 1000; // перевірка кожну хвилину
