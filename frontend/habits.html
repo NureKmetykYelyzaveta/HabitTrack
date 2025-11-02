@@ -88,6 +88,22 @@
       </div>
     </div>
 
+    <div class="modal" id="noteModal">
+      <div class="modal-content glass">
+        <h2>Нотатка до звички</h2>
+        <p id="noteHabitName" style="font-weight:bold;"></p>
+        <textarea
+          id="noteText"
+          rows="5"
+          placeholder="Опиши свої думки, прогрес або настрій..."
+        ></textarea>
+        <div class="modal-buttons">
+          <button class="btn btn-fill" id="saveNoteBtn">💾 Зберегти</button>
+          <button class="btn btn-outline" id="cancelNoteBtn">Закрити</button>
+        </div>
+      </div>
+    </div>
+
     <footer class="footer glass">
       <p>© 2025 HabitTrack. Усі права захищені.</p>
     </footer>
@@ -122,57 +138,35 @@
         const normalizeHabits = () => {
           let changed = false;
           const today = startOfDay(new Date());
-
           habits.forEach((h) => {
-            if (h.progress == null) {
-              h.progress = 0;
-              changed = true;
-            }
-            if (h.streak == null) {
-              h.streak = 0;
-              changed = true;
-            }
-            if (h.doneToday == null) {
-              h.doneToday = 0;
-              changed = true;
-            }
-            if (h.completedToday == null) {
-              h.completedToday = false;
-              changed = true;
-            }
-            if (!h.lastCompleted) {
-              h.lastCompleted = null;
-              changed = true;
-            }
-            if (!h.lastUpdated) {
-              h.lastUpdated = today.toISOString();
-              changed = true;
-            }
+            if (h.progress == null) h.progress = 0;
+            if (h.streak == null) h.streak = 0;
+            if (h.doneToday == null) h.doneToday = 0;
+            if (h.completedToday == null) h.completedToday = false;
+            if (!h.lastCompleted) h.lastCompleted = null;
+            if (!h.lastUpdated) h.lastUpdated = today.toISOString();
 
-            const lastUpd = startOfDay(new Date(h.lastUpdated));
-            if (lastUpd.getTime() !== today.getTime()) {
-              h.doneToday = 0;
-              h.progress = 0;
-              h.completedToday = false;
-              h.lastUpdated = today.toISOString();
-              changed = true;
-            }
+            if (!h.notes) h.notes = {};
 
-            if (h.lastCompleted) {
-              const lastDone = startOfDay(new Date(h.lastCompleted));
-              const diffDays = Math.floor(
-                (today.getTime() - lastDone.getTime()) / (1000 * 60 * 60 * 24)
-              );
 
-              if (diffDays >= 2 && h.streak > 0) {
-                h.streak = 0;
-                changed = true;
-              }
-            }
-          });
+                        const lastUpd = startOfDay(new Date(h.lastUpdated));
+                        const lastDone = h.lastCompleted ? startOfDay(new Date(h.lastCompleted)) : null;
+                        // Якщо день змінився
+                        if (lastUpd.getTime() !== today.getTime()) {
+                          h.doneToday = 0;
+                          h.progress = 0;
+                          h.completedToday = false;
+                          h.lastUpdated = today.toISOString();
+                          // якщо звичку не виконали вчора — обнуляємо streak
+                          if (lastDone && (today - lastDone) / (1000 * 60 * 60 * 24) > 1) {
+                            h.streak = 0;
+                          }
+                          changed = true;
+                        }
+                      });
+                      if (changed) saveHabits();
+                    };
 
-          if (changed) saveHabits();
-        };
 
         normalizeHabits();
 
@@ -240,6 +234,7 @@
               }/${habit.timesPerDay}</p>`
             : ""
         }
+            <button class="btn btn-outline" onclick="openNote('${habit.id}')">📝 Нотатка</button>
         <button class="btn btn-outline" onclick="markDone('${
           habit.id
         }')">✅ Виконано сьогодні</button>
@@ -286,6 +281,7 @@
             lastCompleted: null,
             lastUpdated: today.toISOString(),
             archived: false,
+            notes: {}
           };
 
           const idx = habits.findIndex((h) => h.id === id);
@@ -297,6 +293,7 @@
             newHabit.progress = habits[idx].progress || 0;
             newHabit.lastUpdated =
               habits[idx].lastUpdated || today.toISOString();
+              newHabit.notes = habits[idx].notes || {};
             habits[idx] = newHabit;
           } else {
             habits.push(newHabit);
@@ -397,8 +394,47 @@
           }
         };
 
+        const noteModal = document.getElementById("noteModal");
+        const noteText = document.getElementById("noteText");
+        const noteHabitName = document.getElementById("noteHabitName");
+        const saveNoteBtn = document.getElementById("saveNoteBtn");
+        const cancelNoteBtn = document.getElementById("cancelNoteBtn");
+        let currentHabitId = null;
+
+        window.openNote = (id) => {
+          const h = habits.find((x) => x.id === id);
+          if (!h) return;
+
+          currentHabitId = id;
+          const todayKey = new Date().toISOString().split("T")[0];
+          noteHabitName.textContent = h.name + " — " + todayKey;
+          noteText.value = h.notes?.[todayKey] || "";
+          noteModal.style.display = "flex";
+        };
+
+        saveNoteBtn.addEventListener("click", () => {
+          if (!currentHabitId) return;
+          const h = habits.find((x) => x.id === currentHabitId);
+          if (!h) return;
+
+          const todayKey = new Date().toISOString().split("T")[0];
+          h.notes = h.notes || {};
+          h.notes[todayKey] = noteText.value;
+
+          saveHabits();
+          noteModal.style.display = "none";
+          alert("✅ Нотатку збережено!");
+        });
+
+        cancelNoteBtn.addEventListener(
+          "click",
+          () => (noteModal.style.display = "none")
+        );
+
         renderHabits();
       });
+
+      
 
       document.addEventListener("DOMContentLoaded", () => {
         const authButtons = document.getElementById("authButtons");
