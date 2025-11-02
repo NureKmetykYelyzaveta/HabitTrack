@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HabitTrack — Статистика</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              neon: "#00ff88",
+              dark: "#0b0b0b",
+            },
+            fontFamily: {
+              treb: ['"Trebuchet MS"', '"Segoe UI"', "Arial", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+
+  <body
+    class="bg-[radial-gradient(ellipse_at_top,_#0b0b0b_40%,_#050505_100%)] text-[#e0e0e0] font-treb overflow-x-hidden"
+  >
+    <header
+      class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-[60px] py-[30px] backdrop-blur-xl bg-[rgba(15,15,15,0.55)] border border-[rgba(0,255,120,0.15)] shadow-[0_0_25px_rgba(0,255,120,0.15)] rounded-2xl"
+    >
+      <div
+        class="font-treb font-bold text-[32px] text-[#00ff88] tracking-[0.6px] drop-shadow-[0_0_8px_rgba(0,255,120,0.5)]"
+      >
+        HabitTrack
+      </div>
+
+      <nav
+        class="flex gap-[40px] justify-center items-center relative left-[50px]"
+      >
+        <a
+          href="./main.html"
+          class="text-[20px] hover:text-[#00ff88] transition-colors duration-300"
+          >Головна</a
+        >
+        <a
+          href="./habits.html"
+          class="text-[20px] hover:text-[#00ff88] transition-colors duration-300"
+          >Звички</a
+        >
+        <a href="./stats.html" class="text-[20px] text-[#00ff88] font-semibold"
+          >Статистика</a
+        >
+        <a
+          href="./archive.html"
+          class="text-[20px] hover:text-[#00ff88] transition-colors duration-300"
+          >Архів</a
+        >
+      </nav>
+
+      <div class="flex gap-[10px]">
+        <a
+          href="./login.html"
+          class="px-[20px] py-[10px] rounded-[10px] font-semibold text-[15px] border border-[#00ff88] text-[#00ff88] hover:bg-[rgba(0,255,120,0.1)] hover:shadow-[0_0_18px_rgba(0,255,120,0.3)] transition-all duration-200"
+        >
+          Увійти
+        </a>
+        <a
+          href="./register.html"
+          class="px-[20px] py-[10px] rounded-[10px] font-semibold text-[15px] text-white bg-gradient-to-r from-[#00b060] to-[#00ff88] shadow-[0_0_18px_rgba(0,255,120,0.3)] hover:from-[#00ff88] hover:to-[#00d670] hover:shadow-[0_0_25px_rgba(0,255,120,0.5)] transition-all duration-200"
+        >
+          Зареєструватися
+        </a>
+      </div>
+    </header>
+
+    <main class="pt-44 pb-24 text-center px-6 max-w-6xl mx-auto">
+      <h1
+        class="text-4xl font-bold text-[#00ff88] drop-shadow-[0_0_12px_rgba(0,255,120,0.6)] mb-4"
+      >
+        Статистика звичок
+      </h1>
+      <p class="text-gray-300 text-lg mb-12">
+        Переглядай свій прогрес, ефективність та розподіл звичок за категоріями.
+      </p>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+        <div
+          class="p-8 bg-[rgba(20,20,20,0.8)] border border-[rgba(0,255,120,0.3)] rounded-2xl shadow-lg hover:scale-105 transition"
+        >
+          <h3 class="text-[#00ff88] text-lg font-semibold mb-2">
+            📅 Активних звичок
+          </h3>
+          <p id="totalHabits" class="text-4xl font-bold text-white">0</p>
+        </div>
+        <div
+          class="p-8 bg-[rgba(20,20,20,0.8)] border border-[rgba(0,255,120,0.3)] rounded-2xl shadow-lg hover:scale-105 transition"
+        >
+          <h3 class="text-[#00ff88] text-lg font-semibold mb-2">
+            ✅ Середній прогрес
+          </h3>
+          <p id="avgProgress" class="text-4xl font-bold text-white">0%</p>
+        </div>
+        <div
+          class="p-8 bg-[rgba(20,20,20,0.8)] border border-[rgba(0,255,120,0.3)] rounded-2xl shadow-lg hover:scale-105 transition"
+        >
+          <h3 class="text-[#00ff88] text-lg font-semibold mb-2">
+            🔥 Середній Streak
+          </h3>
+          <p id="avgStreak" class="text-4xl font-bold text-white">0 днів</p>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-12">
+        <div
+          class="bg-[rgba(20,20,20,0.8)] border border-[rgba(0,255,120,0.3)] rounded-3xl p-10 shadow-lg"
+        >
+          <h2 class="text-[#00ff88] text-2xl font-semibold mb-6">
+            Графік виконання звичок
+          </h2>
+          <canvas id="progressChart" height="100"></canvas>
+        </div>
+
+        <div
+          class="bg-[rgba(20,20,20,0.8)] border border-[rgba(0,255,120,0.3)] rounded-3xl p-10 shadow-lg"
+        >
+          <h2 class="text-[#00ff88] text-2xl font-semibold mb-6">
+            Розподіл звичок за категоріями
+          </h2>
+          <canvas id="categoryChart" height="100"></canvas>
+        </div>
+      </div>
+    </main>
+
+    <footer
+      class="border-t border-[rgba(0,255,120,0.15)] py-6 text-center text-gray-400 text-sm"
+    >
+      © 2025 HabitTrack. Усі права захищені.
+    </footer>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const habits = JSON.parse(localStorage.getItem("habits")) || [];
+
+        const activeHabits = habits.filter((h) => !h.archived);
+        const totalHabits = activeHabits.length;
+
+        const avgProgress = totalHabits
+          ? Math.round(
+              activeHabits.reduce((sum, h) => sum + (h.progress || 0), 0) /
+                totalHabits
+            )
+          : 0;
+
+        const avgStreak = totalHabits
+          ? Math.round(
+              activeHabits.reduce((sum, h) => sum + (h.streak || 0), 0) /
+                totalHabits
+            )
+          : 0;
+
+        document.getElementById("totalHabits").textContent = totalHabits;
+        document.getElementById("avgProgress").textContent = avgProgress + "%";
+        document.getElementById("avgStreak").textContent = avgStreak + " днів";
+
+        const labels = activeHabits.map((h) => h.name);
+        const progressData = activeHabits.map((h) => h.progress);
+
+        const drawChart = (ctx, labels, data) => {
+          new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels,
+              datasets: [
+                {
+                  label: "Прогрес (%)",
+                  data,
+                  backgroundColor: "rgba(0, 255, 136, 0.4)",
+                  borderColor: "#00ff88",
+                  borderWidth: 1.5,
+                  borderRadius: 6,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  max: 100,
+                  ticks: { color: "#00ff88" },
+                  grid: { color: "rgba(0,255,136,0.15)" },
+                },
+                x: {
+                  ticks: { color: "#ccc" },
+                  grid: { color: "rgba(0,255,136,0.1)" },
+                },
+              },
+              plugins: { legend: { display: false } },
+            },
+          });
+        };
+
+        const container =
+          document.getElementById("progressChart").parentElement;
+        container.innerHTML = "";
+
+        if (labels.length <= 5) {
+          const canvas = document.createElement("canvas");
+          container.appendChild(canvas);
+          drawChart(canvas, labels, progressData);
+        } else {
+          const chunkSize = 5;
+          for (let i = 0; i < labels.length; i += chunkSize) {
+            const chunkLabels = labels.slice(i, i + chunkSize);
+            const chunkData = progressData.slice(i, i + chunkSize);
+            const canvas = document.createElement("canvas");
+            canvas.height = 120;
+            canvas.classList.add("my-6");
+            container.appendChild(canvas);
+            drawChart(canvas, chunkLabels, chunkData);
+          }
+        }
+
+        const categories = {};
+        activeHabits.forEach((h) => {
+          const category = h.category || h.type || h.habitType || "Інше";
+          categories[category] = (categories[category] || 0) + 1;
+        });
+
+        const ctx2 = document.getElementById("categoryChart");
+        new Chart(ctx2, {
+          type: "doughnut",
+          data: {
+            labels: Object.keys(categories),
+            datasets: [
+              {
+                data: Object.values(categories),
+                backgroundColor: [
+                  "rgba(204, 153, 255, 0.6)",
+                  "rgba(255, 153, 204, 0.6)",
+                  "rgba(51, 153, 255, 0.6)",
+                  "rgba(255, 99, 132, 0.6)",
+                  "rgba(160, 100, 255, 0.6)",
+                  "rgba(255, 165, 0, 0.6)",
+                ],
+                borderColor: "#0a0a0a",
+                borderWidth: 2,
+              },
+            ],
+          },
+          options: {
+            plugins: {
+              legend: {
+                labels: { color: "#00ff88", font: { size: 14 } },
+              },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => `${ctx.label}: ${ctx.parsed} звичок`,
+                },
+              },
+            },
+            cutout: "70%",
+          },
+        });
+      });
+    </script>
+  </body>
+</html>
