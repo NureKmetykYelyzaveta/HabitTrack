@@ -16,16 +16,14 @@ namespace HabitTrack
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            //Додаємо JWT
+            // Додаємо JWT
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
@@ -38,7 +36,7 @@ namespace HabitTrack
                         ValidIssuer = builder.Configuration["Jwt:Issuer"],
                         ValidAudience = builder.Configuration["Jwt:Audience"],
                         IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
                     };
                 });
 
@@ -55,8 +53,6 @@ namespace HabitTrack
                           .AllowAnyMethod();
                 });
             });
-
-            builder.Services.AddControllers();
 
             var app = builder.Build();
 
@@ -75,16 +71,10 @@ namespace HabitTrack
             }
 
             app.UseHttpsRedirection();
-
-            // Використовуємо CORS перед авторизацією
             app.UseCors("AllowFrontend");
-
             app.UseAuthentication();
             app.UseAuthorization();
-
-
             app.MapControllers();
-
             app.Run();
         }
     }

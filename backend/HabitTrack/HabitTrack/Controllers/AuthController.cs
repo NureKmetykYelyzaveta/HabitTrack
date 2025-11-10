@@ -1,6 +1,5 @@
 ﻿using HabitTrack.Data;
 using HabitTrack.DTO;
-using HabitTrack.DTO;
 using HabitTrack.Models;
 using HabitTrack.Services;
 using Microsoft.AspNetCore.Identity;
@@ -70,7 +69,7 @@ namespace HabitTrack.Controllers
 
             var token = jwtService.GenerateToken(user);
 
-            var avatarUrl = user.AvatarImage != null ? $"/api/user/{user.UserId}/avatar" : null;
+            var avatarUrl = !string.IsNullOrEmpty(user.ProfilePhotoUrl) ? $"/api/user/{user.UserId}/avatar" : null;
 
             return Ok(new
             {

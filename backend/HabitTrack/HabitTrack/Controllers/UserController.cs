@@ -4,6 +4,10 @@ using HabitTrack.Models;
 using HabitTrack.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
+using System;
+using System.Linq;
+using Microsoft.AspNetCore.Http;
 
 namespace HabitTrack.Controllers
 {
@@ -21,7 +25,7 @@ namespace HabitTrack.Controllers
         }
 
         [HttpPost("{id}/avatar")]
-        public async Task<IActionResult> UploadAvatar(Guid id, IFormFile file)
+        public async Task<IActionResult> UploadAvatar(int id, IFormFile file)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == id);
             if (user == null)
@@ -35,40 +39,59 @@ namespace HabitTrack.Controllers
             if (!allowedContentTypes.Contains(file.ContentType.ToLower()))
                 return BadRequest("Дозволені тільки зображення формату JPG або PNG");
 
-            // Зчитуємо файл у масив байтів
-            using (var ms = new MemoryStream())
+            // Зберігаємо файл у wwwroot/uploads та зберігаємо посилання
+            var uploads = Path.Combine(_environment.WebRootPath ?? "wwwroot", "uploads");
+            if (!Directory.Exists(uploads)) Directory.CreateDirectory(uploads);
+
+            var fileExt = Path.GetExtension(file.FileName);
+            var fileName = $"{Guid.NewGuid()}{fileExt}";
+            var savePath = Path.Combine(uploads, fileName);
+            using (var fs = new FileStream(savePath, FileMode.Create))
             {
-                await file.CopyToAsync(ms);
-                user.AvatarImage = ms.ToArray();
-                user.AvatarContentType = file.ContentType;
+                await file.CopyToAsync(fs);
             }
 
+            // Store relative url
+            user.ProfilePhotoUrl = $"/uploads/{fileName}";
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Аватар успішно оновлено" });
         }
 
         [HttpGet("{id}/avatar")]
-        public async Task<IActionResult> GetAvatar(Guid id)
+        public async Task<IActionResult> GetAvatar(int id)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == id);
             if (user == null)
                 return NotFound("Користувача не знайдено.");
 
-            if (user.AvatarImage == null || user.AvatarContentType == null)
+            if (string.IsNullOrEmpty(user.ProfilePhotoUrl))
                 return NotFound("Аватар не знайдено.");
 
-            return File(user.AvatarImage, user.AvatarContentType);
+            var relative = user.ProfilePhotoUrl.TrimStart('/');
+            var filePath = Path.Combine(_environment.WebRootPath ?? "wwwroot", relative.Replace('/', Path.DirectorySeparatorChar));
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("Файл аватара не знайдено на сервері.");
+
+            var ext = Path.GetExtension(filePath).ToLower();
+            var contentType = ext switch
+            {
+                ".png" => "image/png",
+                ".jpg" => "image/jpeg",
+                ".jpeg" => "image/jpeg",
+                _ => "application/octet-stream"
+            };
+
+            return PhysicalFile(filePath, contentType);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetUser(Guid id)
+        public async Task<IActionResult> GetUser(int id)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == id);
             if (user == null)
                 return NotFound("Користувача не знайдено.");
-
-            var avatarUrl = user.AvatarImage != null ? $"/api/user/{user.UserId}/avatar" : null;
+            var avatarUrl = !string.IsNullOrEmpty(user.ProfilePhotoUrl) ? $"/api/user/{user.UserId}/avatar" : null;
             
             return Ok(new
             {
@@ -82,7 +105,7 @@ namespace HabitTrack.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(Guid id, UpdateUserDto dto)
+        public async Task<IActionResult> UpdateUser(int id, UpdateUserDto dto)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == id);
             if (user == null)
@@ -100,7 +123,7 @@ namespace HabitTrack.Controllers
 
             await _context.SaveChangesAsync();
 
-            var avatarUrl = user.AvatarImage != null ? $"/api/user/{user.UserId}/avatar" : null;
+            var avatarUrl = !string.IsNullOrEmpty(user.ProfilePhotoUrl) ? $"/api/user/{user.UserId}/avatar" : null;
             
             return Ok(new
             {
@@ -114,7 +137,7 @@ namespace HabitTrack.Controllers
         }
 
         [HttpPut("{id}/password")]
-        public async Task<IActionResult> ChangePassword(Guid id, ChangePasswordDto dto)
+        public async Task<IActionResult> ChangePassword(int id, ChangePasswordDto dto)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == id);
             if (user == null)
