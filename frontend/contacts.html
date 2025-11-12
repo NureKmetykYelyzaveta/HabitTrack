@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HabitTrack — Головна</title>
+  <title>HabitTrack — Контакти</title>
   <link rel="stylesheet" href="./style/main.css" />
   <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
   <script src="./js/auth.js"></script>
   <style>
+    /* Додаємо стиль темного скролу */
     ::-webkit-scrollbar {
       width: 10px;
     }
@@ -28,64 +29,67 @@
 </head>
 <body>
 
-
+  <!-- Шапка така сама, як у main.html -->
   <header class="navbar glass">
     <div class="logo">HabitTrack</div>
     <nav class="nav-links">
-      <a href="#">Головна</a>
+      <a href="./main.html">Головна</a>
       <a href="#about">Про нас</a>
-      <a href="#features">Функції</a>
-      <a href="contacts.html">Контакти</a>
+      <a href="#team">Команда</a>
+      <a href="#contact">Контакти</a>
     </nav>
     <div class="auth-buttons" id="authButtons">
-      <!-- Буде заповнено JavaScript залежно від статусу авторизації -->
+      <!-- Динамічна зона авторизації -->
     </div>
   </header>
 
+  <main class="hero-section small-hero">
+    <div id="particles-js"></div>
+    <section class="hero-content glass">
+      <h1>Контакти та команда HabitTrack</h1>
+      <p>Ми створюємо зручні інструменти для того, щоб допомогти людям формувати здорові звички та досягати цілей.</p>
+    </section>
+  </main>
 
-<main class="hero-section">
-  <div id="particles-js"></div>
-  <section class="hero-content glass">
-    <h1>Контролюй звички. Створюй кращі дні.</h1>
-    <p>HabitTrack — це інструмент, що допомагає формувати здорові звички та вдосконалювати себе щодня.</p>
-    <div class="hero-buttons">
-      <a href="./habits.html" class="btn btn-fill">Почати зараз</a>
-      <a href="#about" class="btn btn-outline">Дізнатись більше</a>
-    </div>
+  <section id="about" class="section glass about">
+    <h2>Про нашу компанію</h2>
+    <p>
+      HabitTrack — це український стартап, заснований у 2025 році. 
+      Ми прагнемо допомогти людям формувати звички, які змінюють життя. 
+      Наш фокус — мотивація, простота використання та технологічна надійність.
+    </p>
   </section>
-</main>
 
-
-
-<section id="about" class="section glass about">
-  <h2>Про HabitTrack</h2>
-  <p>
-    HabitTrack допомагає легко відстежувати щоденні звички та формувати корисні ритуали. 
-    Завдяки інтерактивній статистиці, нагадуванням та плануванню, ти завжди залишаєшся на шляху до кращої версії себе. 
-    З нами ти зможеш підвищити продуктивність, підтримувати баланс між роботою та відпочинком та насолоджуватися процесом вдосконалення.
-  </p>
-</section>
-
-
-
-  <section id="features" class="section features">
-    <h2>Що пропонує HabitTrack</h2>
-    <div class="features-grid">
-      <div class="feature-card glass">
-        <h3>📅 Плануй звички</h3>
-        <p>Створюй список щоденних завдань і відмічай виконане для відчуття прогресу.</p>
+  <section id="team" class="section glass team">
+    <h2>Наша команда</h2>
+    <div class="team-grid">
+      <div class="team-card glass">
+        <h3>Кметик Єлизавета</h3>
+        <p>UI/UX Designer, Scrum master</p>
       </div>
-      <div class="feature-card glass">
-        <h3>📊 Аналітика</h3>
-        <p>Відстежуй результати, переглядай статистику та досягай нових цілей.</p>
+      <div class="team-card glass">
+        <h3>Потурайко Назар</h3>
+        <p>Mobile, BackEnd</p>
       </div>
-      <div class="feature-card glass">
-        <h3>🌙 Баланс</h3>
-        <p>Сон, спорт, харчування — зберігай баланс у всіх сферах життя.</p>
+      <div class="team-card glass">
+        <h3>Никифорова Анастасія</h3>
+        <p>FrontEnd, BackEnd</p>
       </div>
-      <div class="feature-card glass">
-        <h3>🔔 Нагадування</h3>
-        <p>Отримуй сповіщення, щоб не пропускати важливі звички.</p>
+      <div class="team-card glass">
+        <h3>Чеберяк Остап</h3>
+        <p>BackEnd, DB</p>
+      </div>
+      <div class="team-card glass">
+        <h3>Невмовенко Всеволод</h3>
+        <p>QA Engineer</p>
+      </div>
+      <div class="team-card glass">
+        <h3>Якубович Кирило</h3>
+        <p>Mobile, FrontEnd</p>
+      </div>
+      <div class="team-card glass">
+        <h3>Шейко Андрій</h3>
+        <p>business analyst</p>
       </div>
     </div>
   </section>
@@ -93,28 +97,31 @@
 
   <section id="contact" class="section glass contact">
     <h2>Зв’язатися з нами</h2>
-    <p>Маєш пропозиції чи питання? Напиши нам!</p>
+    <p>Маєш питання, ідеї або пропозиції? Ми завжди відкриті до спілкування!</p>
     <form class="contact-form">
       <input type="text" placeholder="Ваше ім’я" required />
       <input type="email" placeholder="Email" required />
       <textarea placeholder="Ваше повідомлення" rows="4" required></textarea>
       <button type="submit" class="btn btn-fill">Надіслати</button>
     </form>
+    <div class="contact-info">
+      <p>📧 Email: support@habittrack.com</p>
+      <p>📍 Київ, Україна</p>
+    </div>
   </section>
-
 
   <footer class="footer glass">
     <p>© 2025 HabitTrack. Усі права захищені.</p>
   </footer>
 
   <script>
-    // Ініціалізація particles.js
+    // Ефект частинок (фон)
     particlesJS("particles-js", {
       "particles": {
-        "number": {"value": 80},
+        "number": {"value": 70},
         "color": {"value": "#00ff88"},
         "shape": {"type": "circle"},
-        "opacity": {"value": 0.5},
+        "opacity": {"value": 0.4},
         "size": {"value": 3},
         "line_linked": {"enable": true, "distance": 120, "color": "#00ff88", "opacity": 0.3, "width": 1},
         "move": {"enable": true, "speed": 2}
@@ -128,10 +135,9 @@
       }
     });
 
-    // Перевірка авторизації та оновлення навігації
+    // Відображення кнопок авторизації, як у головному файлі
     document.addEventListener('DOMContentLoaded', () => {
       const authButtons = document.getElementById('authButtons');
-      
       if (authService.isAuthenticated()) {
         const user = authService.getCurrentUser();
         authButtons.innerHTML = `
