@@ -131,6 +131,7 @@
     // Перевірка авторизації та оновлення навігації
     document.addEventListener('DOMContentLoaded', () => {
       const authButtons = document.getElementById('authButtons');
+      const navLinks = document.querySelector('.nav-links');
       
       if (authService.isAuthenticated()) {
         const user = authService.getCurrentUser();
@@ -139,6 +140,20 @@
           <a href="./profile.html" class="btn btn-outline">Профіль</a>
           <button onclick="authService.logout()" class="btn btn-fill">Вийти</button>
         `;
+
+        // Ensure 'Звички' link is present in nav when logged in
+        if (!navLinks.querySelector('a[href="./habits.html"]')) {
+          const habitsLink = document.createElement('a');
+          habitsLink.href = './habits.html';
+          habitsLink.textContent = 'Звички';
+          // insert after the first link (Головна)
+          const first = navLinks.children[0];
+          if (first && first.nextSibling) {
+            navLinks.insertBefore(habitsLink, first.nextSibling);
+          } else {
+            navLinks.appendChild(habitsLink);
+          }
+        }
       } else {
         authButtons.innerHTML = `
           <a href="./login.html" class="btn btn-outline">Увійти</a>
