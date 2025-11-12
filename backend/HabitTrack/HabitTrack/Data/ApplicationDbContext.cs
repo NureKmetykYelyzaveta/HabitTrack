@@ -25,7 +25,7 @@ namespace HabitTrack.Data
             // User
             modelBuilder.Entity<User>(entity =>
             {
-                entity.ToTable("user");
+                entity.ToTable("User");
                 entity.HasKey(e => e.UserId);
                 entity.Property(e => e.UserId).HasColumnName("user_id");
                 entity.Property(e => e.Username).HasColumnName("username").IsRequired();
@@ -41,7 +41,7 @@ namespace HabitTrack.Data
             // Habit
             modelBuilder.Entity<Habit>(entity =>
             {
-                entity.ToTable("habit");
+                entity.ToTable("Habit");
                 entity.HasKey(e => e.HabitId);
                 entity.Property(e => e.HabitId).HasColumnName("habit_id");
                 entity.Property(e => e.UserId).HasColumnName("user_id");
@@ -59,7 +59,7 @@ namespace HabitTrack.Data
             // HabitCompletion
             modelBuilder.Entity<HabitCompletion>(entity =>
             {
-                entity.ToTable("habit_completion");
+                entity.ToTable("HabitCompletion");
                 entity.HasKey(e => e.CompletionId);
                 entity.Property(e => e.CompletionId).HasColumnName("completion_id");
                 entity.Property(e => e.HabitId).HasColumnName("habit_id");
@@ -72,7 +72,7 @@ namespace HabitTrack.Data
             // Companion
             modelBuilder.Entity<Companion>(entity =>
             {
-                entity.ToTable("companion");
+                entity.ToTable("Companion");
                 entity.HasKey(e => e.CompanionId);
                 entity.Property(e => e.CompanionId).HasColumnName("companion_id");
                 entity.Property(e => e.UserId).HasColumnName("user_id");
@@ -86,7 +86,7 @@ namespace HabitTrack.Data
             // CompanionSlot
             modelBuilder.Entity<CompanionSlot>(entity =>
             {
-                entity.ToTable("companion_slot");
+                entity.ToTable("CompanionSlot");
                 entity.HasKey(e => e.SlotId);
                 entity.Property(e => e.SlotId).HasColumnName("slot_id");
                 entity.Property(e => e.CompanionId).HasColumnName("companion_id");
@@ -101,7 +101,7 @@ namespace HabitTrack.Data
             // Clothes
             modelBuilder.Entity<Clothes>(entity =>
             {
-                entity.ToTable("clothes");
+                entity.ToTable("Clothes");
                 entity.HasKey(e => e.ClothesId);
                 entity.Property(e => e.ClothesId).HasColumnName("clothes_id");
                 entity.Property(e => e.Name).HasColumnName("name");
@@ -114,7 +114,7 @@ namespace HabitTrack.Data
             // UserInventory
             modelBuilder.Entity<UserInventory>(entity =>
             {
-                entity.ToTable("user_inventory");
+                entity.ToTable("UserInventory");
                 entity.HasKey(e => e.InventoryId);
                 entity.Property(e => e.InventoryId).HasColumnName("inventory_id");
                 entity.Property(e => e.UserId).HasColumnName("user_id");

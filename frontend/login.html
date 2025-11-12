@@ -65,8 +65,21 @@
       errorMsg.style.display = 'none';
       successMsg.style.display = 'none';
 
+      // Клієнтська валідація
       if (email === '' || password === '') {
         errorMsg.textContent = 'Будь ласка, заповніть усі поля';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      if (!email.includes('@')) {
+        errorMsg.textContent = 'Некоректний формат email';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      if (password.length < 8) {
+        errorMsg.textContent = 'Пароль має містити мінімум 8 символів';
         errorMsg.style.display = 'block';
         return;
       }
@@ -90,12 +103,19 @@
         }, 1000);
 
       } catch (error) {
-        errorMsg.textContent = error.message;
+        errorMsg.textContent = error.message || 'Помилка входу. Спробуйте ще раз.';
         errorMsg.style.display = 'block';
       } finally {
         // Відновлюємо кнопку
         loginBtn.textContent = 'Увійти';
         loginBtn.disabled = false;
+      }
+    });
+
+    // Дозволяємо вхід при натисненні Enter
+    passwordInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        loginBtn.click();
       }
     });
   </script>

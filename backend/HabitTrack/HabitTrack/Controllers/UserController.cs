@@ -99,6 +99,7 @@ namespace HabitTrack.Controllers
                 user.Username,
                 user.Email,
                 user.Role,
+                user.Balance,
                 AvatarUrl = avatarUrl,
                 user.CreatedAt
             });
@@ -131,6 +132,7 @@ namespace HabitTrack.Controllers
                 user.Username,
                 user.Email,
                 user.Role,
+                user.Balance,
                 AvatarUrl = avatarUrl,
                 user.CreatedAt
             });

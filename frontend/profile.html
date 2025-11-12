@@ -57,6 +57,10 @@
             <span class="meta-k">214</span>
             <span class="meta-l">днів разом</span>
           </div>
+          <div class="meta-item">
+            <span class="meta-k" id="balanceAmount">0</span>
+            <span class="meta-l">монет</span>
+          </div>
         </div>
 
         <div class="profile-badges">
@@ -181,6 +185,11 @@
           day: 'numeric'
         });
         document.getElementById('viewJoinDate').textContent = formattedDate;
+        
+        // Оновлюємо баланс
+        if (userData.balance !== undefined) {
+          document.getElementById('balanceAmount').textContent = userData.balance;
+        }
         
         // Заповнюємо форму редагування
         document.getElementById('fullName').value = userData.username || '';

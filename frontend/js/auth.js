@@ -1,7 +1,10 @@
 // auth.js - Модуль для роботи з аутентифікацією та API
 class AuthService {
     constructor() {
-        this.apiBaseUrl = 'https://localhost:7015/api';
+        // Choose API base dynamically:
+        // - Always use http://localhost:5000/api (backend from run.sh)
+        // - If backend is on different URL, change here
+        this.apiBaseUrl = 'http://localhost:5000/api';
         this.sessionKey = 'habittrack_session';
         this.activityTimeout = 30 * 60 * 1000; // 30 хвилин
         this.checkInterval = 60 * 1000; // перевірка кожну хвилину
@@ -24,7 +27,9 @@ class AuthService {
             const result = await response.json();
             
             if (!response.ok) {
-                throw new Error(result.message || 'Помилка реєстрації');
+                // Отримуємо деталізовану помилку з сервера
+                const errorMessage = result.message || 'Помилка реєстрації';
+                throw new Error(errorMessage);
             }
 
             return result;
@@ -48,12 +53,21 @@ class AuthService {
             const result = await response.json();
             
             if (!response.ok) {
-                throw new Error(result.message || 'Помилка входу');
+                // Отримуємо деталізовану помилку з сервера
+                const errorMessage = result.message || 'Помилка входу';
+                throw new Error(errorMessage);
             }
 
-            // Зберігаємо сесію
+            // Зберігаємо сесію з токеном
             this.saveSession({
-                ...result,
+                userId: result.user.userId,
+                username: result.user.username,
+                email: result.user.email,
+                role: result.user.role,
+                balance: result.user.balance,
+                avatarUrl: result.user.avatarUrl,
+                companionId: result.user.companionId,
+                token: result.token,
                 loginTime: Date.now()
             });
 
@@ -213,6 +227,16 @@ class AuthService {
     checkPageAuth() {
         if (!this.isAuthenticated()) {
             this.redirectToLogin();
+            return false;
+        }
+        return true;
+    }
+
+    // Захистити сторінку від неавторизованих користувачів
+    // Якщо не авторизований, перенаправляє на login.html
+    protectPage() {
+        if (!this.isAuthenticated()) {
+            window.location.href = 'login.html';
             return false;
         }
         return true;

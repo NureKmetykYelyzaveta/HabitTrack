@@ -9,36 +9,180 @@
   </head>
 
   <body>
-    <!-- Навігація -->
     <header class="navbar glass">
       <div class="logo">HabitTrack</div>
       <nav class="nav-links">
         <a href="./main.html">Головна</a>
         <a href="./habits.html">Звички</a>
-        <a href="./stats.html" class="active">Статистика</a>
+        <a href="./stats.html">Статистика</a>
         <a href="./archive.html" class="active">Архів</a>
       </nav>
       <div class="auth-buttons" id="authButtons"></div>
     </header>
 
-    <!-- Основна секція -->
     <main class="section glass habits-section">
-      <h1>Архів звичок</h1>
+      <h1>📦 Архив звичок</h1>
       <p class="subtitle">
-        Тут зберігаються твої архівовані звички. Ти можеш їх відновити або
-        повністю видалити.
+        Ось ваші архівовані звички. Ви можете їх відновити у будь-який час.
       </p>
+
+      <div class="msg error" id="errorMsg" style="display: none;"></div>
+      <div class="msg success" id="successMsg" style="display: none;"></div>
 
       <div class="archive-grid" id="archiveList"></div>
     </main>
 
     <!-- Підвал -->
+        <!-- Підвал -->
     <footer class="footer glass">
       <p>© 2025 HabitTrack. Усі права захищені.</p>
     </footer>
 
     <!-- JavaScript -->
     <script src="./js/auth.js"></script>
+    <script>
+      // Перевірка автентифікації на входу
+      if (!authService.isAuthenticated()) {
+        window.location.href = 'login.html';
+      }
+
+      // Глобальні змінні
+      let currentUser = null;
+      let archivedHabits = [];
+      const API_BASE = authService.apiBaseUrl;
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        // Ініціалізуємо користувача
+        currentUser = authService.getCurrentUser();
+        
+        // Завантажуємо архівовані звички
+        await loadArchivedHabits();
+        
+        // Відображаємо звички
+        renderArchivedHabits();
+        
+        // Оновлюємо навігацію
+        updateAuthButtons();
+      });
+
+      // Завантаження архівованих звичок з API
+      async function loadArchivedHabits() {
+        try {
+          const response = await fetch(`${API_BASE}/habit/user/${currentUser.userId}/archived`);
+          if (!response.ok) throw new Error('Помилка завантаження архіву');
+          archivedHabits = await response.json();
+        } catch (error) {
+          console.error('Помилка:', error);
+          showError('Помилка завантаження архіву звичок');
+          archivedHabits = [];
+        }
+      }
+
+      // Розархівування звички
+      window.unarchiveHabit = async (habitId) => {
+        if (!confirm("Відновити цю звичку?")) return;
+
+        try {
+          const response = await fetch(`${API_BASE}/habit/${habitId}/unarchive?userId=${currentUser.userId}`, {
+            method: 'POST'
+          });
+
+          if (!response.ok) throw new Error('Помилка при розархівуванні');
+          
+          showSuccess('Звичку відновлено успішно');
+          await loadArchivedHabits();
+          renderArchivedHabits();
+        } catch (error) {
+          console.error('Помилка:', error);
+          showError(error.message);
+        }
+      };
+
+      // Видалення звички з архіву
+      window.deleteArchivedHabit = async (habitId) => {
+        if (!confirm("Назавжди видалити цю звичку?")) return;
+
+        try {
+          const response = await fetch(`${API_BASE}/habit/${habitId}?userId=${currentUser.userId}`, {
+            method: 'DELETE'
+          });
+
+          if (!response.ok) throw new Error('Помилка видалення');
+          
+          showSuccess('Звичку видалено');
+          await loadArchivedHabits();
+          renderArchivedHabits();
+        } catch (error) {
+          console.error('Помилка:', error);
+          showError(error.message);
+        }
+      };
+
+      // Відображення архівованих звичок
+      function renderArchivedHabits() {
+        const habitsList = document.getElementById("archiveList");
+
+        if (archivedHabits.length === 0) {
+          habitsList.innerHTML = "<p>Архив пустий. Ви поки не архівували жодної звички.</p>";
+          return;
+        }
+
+        habitsList.innerHTML = "";
+
+        archivedHabits.forEach(habit => {
+          const card = document.createElement("div");
+          card.className = "habit-card glass";
+          const repeatInfo = habit.repeatCount > 1 ? `<p>🔁 Повторень: ${habit.repeatCount} раз(и) на день</p>` : '';
+          card.innerHTML = `
+            <div class="habit-header">
+              <h3>${habit.name}</h3>
+              <div class="habit-actions">
+                <button title="Відновити" onclick="unarchiveHabit(${habit.habitId})">↩️</button>
+                <button title="Видалити" onclick="deleteArchivedHabit(${habit.habitId})">🗑️</button>
+              </div>
+            </div>
+            <p>Категорія: ${habit.category}</p>
+            <p>🔥 Останній streak: <b>${habit.streak}</b> днів</p>
+            <p>Всього виконано: ${habit.completionCount} раз(и)</p>
+            ${repeatInfo}
+            ${habit.note ? `<p>📝 Нотатка: ${habit.note}</p>` : ''}
+            <p>📅 Архівовано: <small>${new Date(habit.createdAt).toLocaleDateString('uk-UA')}</small></p>
+          `;
+          habitsList.appendChild(card);
+        });
+      }
+
+      // Оновлення навігації
+      function updateAuthButtons() {
+        const authButtons = document.getElementById("authButtons");
+        authButtons.innerHTML = `
+          <span class="user-greeting">Привіт, ${currentUser.username}!</span>
+          <a href="./profile.html" class="btn btn-outline">Профіль</a>
+          <button onclick="authService.logout()" class="btn btn-fill">Вийти</button>
+        `;
+      }
+
+      // Утиліти для повідомлень
+      function showError(message) {
+        const errorDiv = document.getElementById("errorMsg");
+        if (!errorDiv) return;
+        errorDiv.textContent = message;
+        errorDiv.style.display = "block";
+        setTimeout(() => {
+          errorDiv.style.display = "none";
+        }, 5000);
+      }
+
+      function showSuccess(message) {
+        const successDiv = document.getElementById("successMsg");
+        if (!successDiv) return;
+        successDiv.textContent = message;
+        successDiv.style.display = "block";
+        setTimeout(() => {
+          successDiv.style.display = "none";
+        }, 3000);
+      }
+    </script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const archiveList = document.getElementById("archiveList");

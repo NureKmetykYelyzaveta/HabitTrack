@@ -40,6 +40,9 @@
         </select>
       </div>
 
+      <div class="msg error" id="errorMsg" style="display: none;"></div>
+      <div class="msg success" id="successMsg" style="display: none;"></div>
+
       <div class="habits-grid" id="habitsList"></div>
     </main>
 
@@ -65,6 +68,13 @@
             <option value="інше">Інше</option>
           </select>
 
+          <label>Нотатка (опційно):</label>
+          <textarea
+            id="habitNote"
+            placeholder="Додатківна інформація про звичку..."
+            rows="3"
+          ></textarea>
+
           <label>Ціль (кількість днів):</label>
           <input type="number" id="habitGoal" min="1" max="30" value="7" />
 
@@ -75,7 +85,7 @@
 
           <div id="complexSettings" style="display: none">
             <label>Кількість виконань на день:</label>
-            <input type="number" id="timesPerDay" min="1" max="10" value="1" />
+            <input type="number" id="repeatCount" min="1" max="10" value="1" />
           </div>
 
           <div class="modal-buttons">
@@ -110,348 +120,307 @@
 
     <script src="./js/auth.js"></script>
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
+      // Перевірка автентифікації на входу
+      if (!authService.isAuthenticated()) {
+        window.location.href = 'login.html';
+      }
+
+      // Глобальні змінні
+      let currentUser = null;
+      let habits = [];
+      const API_BASE = authService.apiBaseUrl;
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        // Ініціалізуємо користувача
+        currentUser = authService.getCurrentUser();
+        
+        // Завантажуємо звички
+        await loadHabits();
+        
+        // Налаштовуємо evento слухачів
+        setupEventListeners();
+        
+        // Відображаємо звички
+        renderHabits();
+        
+        // Оновлюємо навігацію
+        updateAuthButtons();
+      });
+
+      // Завантаження звичок з API
+      async function loadHabits() {
+        try {
+          const response = await fetch(`${API_BASE}/habit/user/${currentUser.userId}`);
+          if (!response.ok) throw new Error('Помилка завантаження звичок');
+          habits = await response.json();
+        } catch (error) {
+          console.error('Помилка:', error);
+          showError('Помилка завантаження звичок');
+          habits = [];
+        }
+      }
+
+      // Налаштування event слухачів
+      function setupEventListeners() {
         const habitsList = document.getElementById("habitsList");
         const modal = document.getElementById("habitModal");
         const form = document.getElementById("habitForm");
         const addHabitBtn = document.getElementById("addHabitBtn");
         const cancelBtn = document.getElementById("cancelBtn");
         const categoryFilter = document.getElementById("habitCategory");
-        const categoryFilterBlock = document.querySelector(".category-filter");
-        const complexCheckbox = document.getElementById("isComplex");
+        const isComplexCheckbox = document.getElementById("isComplex");
         const complexSettings = document.getElementById("complexSettings");
-
-        let habits = JSON.parse(localStorage.getItem("habits")) || [];
-        const saveHabits = () =>
-          localStorage.setItem("habits", JSON.stringify(habits));
-
-        const startOfDay = (d) =>
-          new Date(d.getFullYear(), d.getMonth(), d.getDate());
-        const today = startOfDay(new Date());
-
-        const daysBetween = (a, b) => {
-          const A = startOfDay(a).getTime();
-          const B = startOfDay(b).getTime();
-          return Math.round((A - B) / (1000 * 60 * 60 * 24));
-        };
-
-        const normalizeHabits = () => {
-          let changed = false;
-          const today = startOfDay(new Date());
-          habits.forEach((h) => {
-            if (h.progress == null) h.progress = 0;
-            if (h.streak == null) h.streak = 0;
-            if (h.doneToday == null) h.doneToday = 0;
-            if (h.completedToday == null) h.completedToday = false;
-            if (!h.lastCompleted) h.lastCompleted = null;
-            if (!h.lastUpdated) h.lastUpdated = today.toISOString();
-
-            if (!h.notes) h.notes = {};
-
-
-                        const lastUpd = startOfDay(new Date(h.lastUpdated));
-                        const lastDone = h.lastCompleted ? startOfDay(new Date(h.lastCompleted)) : null;
-                        // Якщо день змінився
-                        if (lastUpd.getTime() !== today.getTime()) {
-                          h.doneToday = 0;
-                          h.progress = 0;
-                          h.completedToday = false;
-                          h.lastUpdated = today.toISOString();
-                          // якщо звичку не виконали вчора — обнуляємо streak
-                          if (lastDone && (today - lastDone) / (1000 * 60 * 60 * 24) > 1) {
-                            h.streak = 0;
-                          }
-                          changed = true;
-                        }
-                      });
-                      if (changed) saveHabits();
-                    };
-
-
-        normalizeHabits();
-
-        complexCheckbox.addEventListener("change", () => {
-          complexSettings.style.display = complexCheckbox.checked
-            ? "block"
-            : "none";
-        });
-
-        const renderHabits = () => {
-          habitsList.innerHTML = "";
-          const filter = categoryFilter.value;
-          const filtered =
-            filter === "all"
-              ? habits.filter((h) => !h.archived)
-              : habits.filter((h) => h.type === filter && !h.archived);
-
-          if (habits && habits.length > 0 && habits.some((h) => !h.archived)) {
-            categoryFilterBlock.style.display = "flex";
-            requestAnimationFrame(() =>
-              categoryFilterBlock.classList.add("visible")
-            );
-          } else {
-            categoryFilterBlock.classList.remove("visible");
-            setTimeout(() => {
-              categoryFilterBlock.style.display = "none";
-            }, 400);
-          }
-
-          if (filtered.length === 0) {
-            habitsList.innerHTML = "<p>Поки що немає звичок. Додай першу!</p>";
-            return;
-          }
-
-          filtered.forEach((habit) => {
-            const card = document.createElement("div");
-            card.className = "habit-card glass";
-            card.innerHTML = `
-        <div class="habit-header">
-          <h3>${habit.name}</h3>
-          <div class="habit-actions">
-            <button title="Редагувати" onclick="editHabit('${
-              habit.id
-            }')">✏️</button>
-            <button title="Видалити" onclick="deleteHabit('${
-              habit.id
-            }')">🗑️</button>
-            <button title="Архівувати" onclick="archiveHabit('${
-              habit.id
-            }')">📦</button>
-          </div>
-        </div>
-        <p>Категорія: ${habit.type}</p>
-        <p>Ціль: ${habit.goal} разів/тиждень</p>
-        ${
-          habit.complex
-            ? `<p>Складна звичка: ${habit.timesPerDay} раз(и) на день</p>`
-            : ""
-        }
-        <p>🔥 Поточний Streak: <b>${habit.streak || 0}</b> днів</p>
-        ${
-          habit.complex
-            ? `<p class="progress-info">Виконано сьогодні: ${
-                habit.doneToday || 0
-              }/${habit.timesPerDay}</p>`
-            : ""
-        }
-            <button class="btn btn-outline" onclick="openNote('${habit.id}')">📝 Нотатка</button>
-        <button class="btn btn-outline" onclick="markDone('${
-          habit.id
-        }')">✅ Виконано сьогодні</button>
-        <div class="progress-bar">
-          <div class="progress-bar-fill" style="width: ${Math.min(
-            100,
-            Math.max(0, habit.progress || 0)
-          )}%;"></div>
-        </div>
-      `;
-            habitsList.appendChild(card);
-          });
-        };
 
         addHabitBtn.addEventListener("click", () => {
           form.reset();
           document.getElementById("habitId").value = "";
           document.getElementById("modalTitle").textContent = "Створити звичку";
-          modal.style.display = "flex";
           complexSettings.style.display = "none";
+          modal.style.display = "flex";
         });
 
-        cancelBtn.addEventListener(
-          "click",
-          () => (modal.style.display = "none")
-        );
-
-        form.addEventListener("submit", (e) => {
-          e.preventDefault();
-          const id =
-            document.getElementById("habitId").value || Date.now().toString();
-          const newHabit = {
-            id,
-            name: document.getElementById("habitName").value,
-            type: document.getElementById("habitType").value,
-            goal: parseInt(document.getElementById("habitGoal").value),
-            complex: document.getElementById("isComplex").checked,
-            timesPerDay:
-              parseInt(document.getElementById("timesPerDay").value) || 1,
-            doneToday: 0,
-            progress: 0,
-            completedToday: false,
-            streak: 0,
-            lastCompleted: null,
-            lastUpdated: today.toISOString(),
-            archived: false,
-            notes: {}
-          };
-
-          const idx = habits.findIndex((h) => h.id === id);
-          if (idx >= 0) {
-            newHabit.streak = habits[idx].streak || 0;
-            newHabit.lastCompleted = habits[idx].lastCompleted || null;
-            newHabit.completedToday = habits[idx].completedToday || false;
-            newHabit.doneToday = habits[idx].doneToday || 0;
-            newHabit.progress = habits[idx].progress || 0;
-            newHabit.lastUpdated =
-              habits[idx].lastUpdated || today.toISOString();
-              newHabit.notes = habits[idx].notes || {};
-            habits[idx] = newHabit;
-          } else {
-            habits.push(newHabit);
-          }
-
-          saveHabits();
-          renderHabits();
+        cancelBtn.addEventListener("click", () => {
           modal.style.display = "none";
         });
 
+        form.addEventListener("submit", handleFormSubmit);
         categoryFilter.addEventListener("change", renderHabits);
 
-        window.editHabit = (id) => {
-          const h = habits.find((h) => h.id === id);
-          if (!h) return;
-          document.getElementById("habitId").value = h.id;
-          document.getElementById("habitName").value = h.name;
-          document.getElementById("habitType").value = h.type;
-          document.getElementById("habitGoal").value = h.goal;
-          document.getElementById("isComplex").checked = h.complex;
-          document.getElementById("timesPerDay").value = h.timesPerDay || 1;
-          complexSettings.style.display = h.complex ? "block" : "none";
-          document.getElementById("modalTitle").textContent =
-            "Редагувати звичку";
-          modal.style.display = "flex";
-        };
-
-        window.deleteHabit = (id) => {
-          if (confirm("Видалити цю звичку?")) {
-            habits = habits.filter((h) => h.id !== id);
-            saveHabits();
-            renderHabits();
-          }
-        };
-
-        window.markDone = (id) => {
-          const h = habits.find((h) => h.id === id);
-          if (!h) return;
-
-          const now = new Date();
-          const today = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate()
-          );
-
-          if (h.completedToday) {
-            alert("Ця звичка вже виконана сьогодні!");
-            return;
-          }
-
-          if (h.complex) {
-            h.doneToday = (h.doneToday || 0) + 1;
-            if (h.doneToday > h.timesPerDay) h.doneToday = h.timesPerDay;
-            h.progress = Math.round((h.doneToday / h.timesPerDay) * 100);
-          } else {
-            h.progress = 100;
-          }
-
-          if (h.progress >= 100) {
-            if (h.lastCompleted) {
-              const last = new Date(h.lastCompleted);
-              const lastDay = new Date(
-                last.getFullYear(),
-                last.getMonth(),
-                last.getDate()
-              );
-              const diffDays = Math.floor(
-                (today - lastDay) / (1000 * 60 * 60 * 24)
-              );
-
-              if (diffDays === 1) {
-                h.streak = (h.streak || 0) + 1;
-              } else if (diffDays >= 2) {
-                h.streak = 1;
-              } else if (diffDays === 0) {
-                h.streak = h.streak || 1;
-              }
-            } else {
-              h.streak = 1;
-            }
-
-            h.completedToday = true;
-            h.lastCompleted = today.toISOString();
-          }
-
-          h.lastUpdated = today.toISOString();
-          saveHabits();
-          renderHabits();
-        };
-
-        window.archiveHabit = (id) => {
-          const h = habits.find((h) => h.id === id);
-          if (h) {
-            h.archived = true;
-            saveHabits();
-            renderHabits();
-          }
-        };
-
-        const noteModal = document.getElementById("noteModal");
-        const noteText = document.getElementById("noteText");
-        const noteHabitName = document.getElementById("noteHabitName");
-        const saveNoteBtn = document.getElementById("saveNoteBtn");
-        const cancelNoteBtn = document.getElementById("cancelNoteBtn");
-        let currentHabitId = null;
-
-        window.openNote = (id) => {
-          const h = habits.find((x) => x.id === id);
-          if (!h) return;
-
-          currentHabitId = id;
-          const todayKey = new Date().toISOString().split("T")[0];
-          noteHabitName.textContent = h.name + " — " + todayKey;
-          noteText.value = h.notes?.[todayKey] || "";
-          noteModal.style.display = "flex";
-        };
-
-        saveNoteBtn.addEventListener("click", () => {
-          if (!currentHabitId) return;
-          const h = habits.find((x) => x.id === currentHabitId);
-          if (!h) return;
-
-          const todayKey = new Date().toISOString().split("T")[0];
-          h.notes = h.notes || {};
-          h.notes[todayKey] = noteText.value;
-
-          saveHabits();
-          noteModal.style.display = "none";
-          alert("✅ Нотатку збережено!");
+        // Показуємо/приховуємо складні налаштування
+        isComplexCheckbox.addEventListener("change", () => {
+          complexSettings.style.display = isComplexCheckbox.checked ? "block" : "none";
         });
 
-        cancelNoteBtn.addEventListener(
-          "click",
-          () => (noteModal.style.display = "none")
-        );
+        // Закриття модалю при клику на фон
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) {
+            modal.style.display = "none";
+          }
+        });
+      }
 
-        renderHabits();
-      });
+      // Обробка форми
+      async function handleFormSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const habitId = document.getElementById("habitId").value;
+        const name = document.getElementById("habitName").value;
+        const category = document.getElementById("habitType").value;
+        const note = document.getElementById("habitNote")?.value || "";
+        const isComplex = document.getElementById("isComplex").checked;
+        const repeatCount = isComplex ? parseInt(document.getElementById("repeatCount").value) : 1;
 
-      
-
-      document.addEventListener("DOMContentLoaded", () => {
-        const authButtons = document.getElementById("authButtons");
-        if (authService.isAuthenticated()) {
-          const user = authService.getCurrentUser();
-          authButtons.innerHTML = `
-      <span class="user-greeting">Привіт, ${user.username}!</span>
-      <a href="./profile.html" class="btn btn-outline">Профіль</a>
-      <button onclick="authService.logout()" class="btn btn-fill">Вийти</button>
-    `;
-        } else {
-          authButtons.innerHTML = `
-      <a href="./login.html" class="btn btn-outline">Увійти</a>
-      <a href="./register.html" class="btn btn-fill">Зареєструватися</a>
-    `;
+        if (!name.trim()) {
+          showError("Назва звички обов'язкова");
+          return;
         }
-      });
+
+        try {
+          if (habitId) {
+            // Оновлення звички
+            const response = await fetch(`${API_BASE}/habit/${habitId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: currentUser.userId,
+                name: name.trim(),
+                category: category,
+                note: note,
+                repeatCount: repeatCount
+              })
+            });
+
+            if (!response.ok) throw new Error('Помилка оновлення звички');
+            showSuccess('Звичку оновлено успішно');
+          } else {
+            // Створення нової звички
+            const response = await fetch(`${API_BASE}/habit`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: currentUser.userId,
+                name: name.trim(),
+                category: category,
+                note: note,
+                repeatCount: repeatCount
+              })
+            });
+
+            if (!response.ok) throw new Error('Помилка створення звички');
+            showSuccess('Звичку створено успішно');
+          }
+
+          // Перезавантажуємо звички
+          await loadHabits();
+          renderHabits();
+          document.getElementById("habitModal").style.display = "none";
+        } catch (error) {
+          console.error('Помилка:', error);
+          showError(error.message);
+        }
+      }
+
+      // Редагування звички
+      window.editHabit = (habitId) => {
+        const habit = habits.find(h => h.habitId === habitId);
+        if (!habit) return;
+
+        document.getElementById("habitId").value = habit.habitId;
+        document.getElementById("habitName").value = habit.name;
+        document.getElementById("habitType").value = habit.category;
+        document.getElementById("habitNote").value = habit.note || "";
+        document.getElementById("isComplex").checked = habit.repeatCount > 1;
+        document.getElementById("repeatCount").value = habit.repeatCount || 1;
+        
+        // Показуємо/приховуємо complexSettings
+        const complexSettings = document.getElementById("complexSettings");
+        complexSettings.style.display = habit.repeatCount > 1 ? "block" : "none";
+        
+        document.getElementById("modalTitle").textContent = "Редагувати звичку";
+        document.getElementById("habitModal").style.display = "flex";
+      };
+
+      // Видалення звички
+      window.deleteHabit = async (habitId) => {
+        if (!confirm("Видалити цю звичку?")) return;
+
+        try {
+          const response = await fetch(`${API_BASE}/habit/${habitId}?userId=${currentUser.userId}`, {
+            method: 'DELETE'
+          });
+
+          if (!response.ok) throw new Error('Помилка видалення звички');
+          
+          showSuccess('Звичку видалено успішно');
+          await loadHabits();
+          renderHabits();
+        } catch (error) {
+          console.error('Помилка:', error);
+          showError(error.message);
+        }
+      };
+
+      // Архівування звички
+      window.archiveHabit = async (habitId) => {
+        if (!confirm("Архівувати цю звичку?")) return;
+
+        try {
+          const response = await fetch(`${API_BASE}/habit/${habitId}/archive?userId=${currentUser.userId}`, {
+            method: 'POST'
+          });
+
+          if (!response.ok) throw new Error('Помилка архівування звички');
+          
+          showSuccess('Звичку архівовано успішно');
+          await loadHabits();
+          renderHabits();
+        } catch (error) {
+          console.error('Помилка:', error);
+          showError(error.message);
+        }
+      };
+
+      // Позначити звичку як виконану
+      window.markDone = async (habitId) => {
+        try {
+          const response = await fetch(`${API_BASE}/habit/${habitId}/complete?userId=${currentUser.userId}`, {
+            method: 'POST'
+          });
+
+          if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.message || 'Помилка при позначенні');
+          }
+
+          const data = await response.json();
+          showSuccess(`✅ Звичка виконана! Streak: ${data.newStreak} днів`);
+          await loadHabits();
+          renderHabits();
+        } catch (error) {
+          console.error('Помилка:', error);
+          showError(error.message);
+        }
+      };
+
+      // Відображення звичок
+      function renderHabits() {
+        const habitsList = document.getElementById("habitsList");
+        const categoryFilter = document.getElementById("habitCategory").value;
+        const categoryFilterBlock = document.querySelector(".category-filter");
+
+        if (habits.length === 0) {
+          habitsList.innerHTML = "<p>Поки що немає звичок. Додай першу!</p>";
+          categoryFilterBlock.style.display = "none";
+          return;
+        }
+
+        categoryFilterBlock.style.display = "flex";
+
+        const filtered = categoryFilter === "all" 
+          ? habits 
+          : habits.filter(h => h.category === categoryFilter);
+
+        habitsList.innerHTML = "";
+
+        if (filtered.length === 0) {
+          habitsList.innerHTML = "<p>Немає звичок в цій категорії.</p>";
+          return;
+        }
+
+        filtered.forEach(habit => {
+          const card = document.createElement("div");
+          card.className = "habit-card glass";
+          const repeatInfo = habit.repeatCount > 1 ? `<p>🔁 Повторень: ${habit.repeatCount} раз(и) на день</p>` : '';
+          card.innerHTML = `
+            <div class="habit-header">
+              <h3>${habit.name}</h3>
+              <div class="habit-actions">
+                <button title="Редагувати" onclick="editHabit(${habit.habitId})">✏️</button>
+                <button title="Архівувати" onclick="archiveHabit(${habit.habitId})">📦</button>
+                <button title="Видалити" onclick="deleteHabit(${habit.habitId})">🗑️</button>
+              </div>
+            </div>
+            <p>Категорія: ${habit.category}</p>
+            <p>🔥 Streak: <b>${habit.streak}</b> днів</p>
+            <p>Виконано: ${habit.completionCount} раз(и)</p>
+            ${repeatInfo}
+            ${habit.note ? `<p>📝 Нотатка: ${habit.note}</p>` : ''}
+            <button class="btn btn-outline" onclick="markDone(${habit.habitId})">✅ Виконано сьогодні</button>
+          `;
+          habitsList.appendChild(card);
+        });
+      }
+
+      // Оновлення навігації
+      function updateAuthButtons() {
+        const authButtons = document.getElementById("authButtons");
+        authButtons.innerHTML = `
+          <span class="user-greeting">Привіт, ${currentUser.username}!</span>
+          <a href="./profile.html" class="btn btn-outline">Профіль</a>
+          <button onclick="authService.logout()" class="btn btn-fill">Вийти</button>
+        `;
+      }
+
+      // Утиліти для повідомлень
+      function showError(message) {
+        const errorDiv = document.getElementById("errorMsg");
+        if (!errorDiv) return;
+        errorDiv.textContent = message;
+        errorDiv.style.display = "block";
+        setTimeout(() => {
+          errorDiv.style.display = "none";
+        }, 5000);
+      }
+
+      function showSuccess(message) {
+        const successDiv = document.getElementById("successMsg");
+        if (!successDiv) return;
+        successDiv.textContent = message;
+        successDiv.style.display = "block";
+        setTimeout(() => {
+          successDiv.style.display = "none";
+        }, 3000);
+      }
     </script>
   </body>
 </html>

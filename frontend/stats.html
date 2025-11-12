@@ -142,6 +142,13 @@
       © 2025 HabitTrack. Усі права захищені.
     </footer>
 
+    <script src="./js/auth.js"></script>
+    <script>
+      // Перевірка автентифікації на входу
+      if (!authService.isAuthenticated()) {
+        window.location.href = 'login.html';
+      }
+    </script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const habits = JSON.parse(localStorage.getItem("habits")) || [];

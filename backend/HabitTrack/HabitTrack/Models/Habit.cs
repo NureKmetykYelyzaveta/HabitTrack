@@ -35,6 +35,9 @@ namespace HabitTrack.Models
         [Column("created_at")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        [Column("archived")]
+        public bool Archived { get; set; } = false;
+
     public ICollection<HabitCompletion> Completions { get; set; } = new List<HabitCompletion>();
     }
 }

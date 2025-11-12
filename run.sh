@@ -1,12 +1,9 @@
 #!/bin/bash
-FRONT_PORT=5500
 BACKEND_PORT=5000
-BACKEND_PROJECT="HabitTrack/backend/HabitTrack/HabitTrack/HabitTrack.csproj"
+BACKEND_PROJECT="backend/HabitTrack/HabitTrack/HabitTrack.csproj"
 
-cd frontend && python3 -m http.server $FRONT_PORT --bind 127.0.0.1 &
-FRONT_PID=$!
-cd ..
+echo "🚀 Запуск HabitTrack..."
+echo "📱 Фронтенд: http://localhost:5000"
+echo "🔌 API: http://localhost:5000/api"
 
 dotnet run --project "$BACKEND_PROJECT" --urls "http://localhost:$BACKEND_PORT"
-
-kill $FRONT_PID 2>/dev/null

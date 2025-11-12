@@ -5,6 +5,8 @@ using System.Security.Claims;
 using System.Text;
 using HabitTrack.Data;
 using HabitTrack.Services;
+using Microsoft.Extensions.FileProviders;
+using System.IO;
 using Microsoft.EntityFrameworkCore;
 
 namespace HabitTrack
@@ -68,6 +70,30 @@ namespace HabitTrack
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
+            }
+
+            // Serve frontend static files from the repository's `frontend` folder (if present).
+            // This allows visiting the backend URL (e.g. http://localhost:5000/) to return the frontend.
+            var frontendPath = Path.Combine(builder.Environment.ContentRootPath, "..", "..", "..", "frontend");
+            if (Directory.Exists(frontendPath))
+            {
+                var physicalProvider = new PhysicalFileProvider(Path.GetFullPath(frontendPath));
+
+                // Use main.html as a default file so root returns the app landing page
+                var defaultFilesOptions = new DefaultFilesOptions
+                {
+                    FileProvider = physicalProvider,
+                };
+                // Prefer `main.html` for this project
+                defaultFilesOptions.DefaultFileNames.Clear();
+                defaultFilesOptions.DefaultFileNames.Add("main.html");
+
+                app.UseDefaultFiles(defaultFilesOptions);
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = physicalProvider,
+                    RequestPath = ""
+                });
             }
 
             app.UseHttpsRedirection();

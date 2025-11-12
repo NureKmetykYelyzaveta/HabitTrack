@@ -84,37 +84,60 @@
       errorMsg.style.display = 'none';
       successMsg.style.display = 'none';
 
-      // Валідація
+      // Клієнтська валідація
       if (!fullname.value.trim()) {
         errorMsg.textContent = "Вкажіть ім'я та прізвище";
         errorMsg.style.display = 'block';
         return;
       }
+
+      if (fullname.value.trim().length < 3) {
+        errorMsg.textContent = "Ім'я має містити мінімум 3 символи";
+        errorMsg.style.display = 'block';
+        return;
+      }
+
       if (!email.value.includes('@')) {
         errorMsg.textContent = 'Некоректний email';
         errorMsg.style.display = 'block';
         return;
       }
+
       if (password.value.length < 8) {
         errorMsg.textContent = 'Пароль має містити мінімум 8 символів';
         errorMsg.style.display = 'block';
         return;
       }
+
+      if (!/[A-Z]/.test(password.value)) {
+        errorMsg.textContent = 'Пароль має містити хоча б одну велику літеру';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      if (!/[0-9]/.test(password.value)) {
+        errorMsg.textContent = 'Пароль має містити хоча б одну цифру';
+        errorMsg.style.display = 'block';
+        return;
+      }
+
       if (password.value !== confirm.value) {
         errorMsg.textContent = 'Паролі не збігаються';
         errorMsg.style.display = 'block';
         return;
       }
+
       if (!agree.checked) {
         errorMsg.textContent = 'Підтвердіть згоду з умовами';
         errorMsg.style.display = 'block';
         return;
       }
 
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+
       try {
         // Показуємо індикатор завантаження
-        const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
         submitBtn.textContent = 'Створюємо акаунт...';
         submitBtn.disabled = true;
 
@@ -122,11 +145,10 @@
         const userData = {
           username: fullname.value.trim(),
           email: email.value.trim(),
-          password: password.value,
-          avatarUrl: null
+          password: password.value
         };
 
-        await authService.register(userData);
+        const response = await authService.register(userData);
         
         // Успішна реєстрація
         successMsg.style.display = 'block';
@@ -138,7 +160,7 @@
         }, 2000);
 
       } catch (error) {
-        errorMsg.textContent = error.message;
+        errorMsg.textContent = error.message || 'Помилка реєстрації. Спробуйте ще раз.';
         errorMsg.style.display = 'block';
       } finally {
         // Відновлюємо кнопку
