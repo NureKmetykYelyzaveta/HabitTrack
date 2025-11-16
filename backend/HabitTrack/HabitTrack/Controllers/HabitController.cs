@@ -236,50 +236,41 @@ namespace HabitTrack.Controllers
                 if (habit.UserId != userId)
                     return Unauthorized(new { message = "Ви не маєте прав відмічати цю звичку." });
 
-                // Перевіряємо чи вже позначена сьогодні
                 var today = DateTime.UtcNow.Date;
-                var completedToday = habit.Completions.Any(c => c.CompletedAt.Date == today);
+                var completionsToday = habit.Completions.Count(c => c.CompletedAt.Date == today);
 
-                if (completedToday)
-                    return BadRequest(new { message = "Звичка вже позначена як виконана сьогодні." });
+                if (completionsToday >= habit.RepeatCount)
+                    return BadRequest(new { message = "Ліміт виконань на сьогодні досягнуто." });
 
-                // Створюємо запис про виконання
                 var completion = new HabitCompletion
                 {
                     HabitId = habitId,
                     CompletedAt = DateTime.UtcNow,
-                    CoinsEarned = 10 // База кількість монет за виконання
+                    CoinsEarned = 10
                 };
-
-                // Оновлюємо streak якщо вчора була виконана
-                var yesterday = today.AddDays(-1);
-                var completedYesterday = habit.Completions.Any(c => c.CompletedAt.Date == yesterday);
-                
-                if (completedYesterday)
-                {
-                    habit.Streak++;
-                }
-                else
-                {
-                    habit.Streak = 1;
-                }
-
-                habit.LastCheckDate = DateTime.UtcNow;
 
                 _context.HabitCompletions.Add(completion);
                 await _context.SaveChangesAsync();
 
+                completionsToday++;
+
+                // Якщо досягнуто RepeatCount – оновлюємо streak
+                if (completionsToday == habit.RepeatCount)
+                {
+                    var yesterday = today.AddDays(-1);
+                    var completedYesterday = habit.Completions.Any(c => c.CompletedAt.Date == yesterday);
+
+                    habit.Streak = completedYesterday ? habit.Streak + 1 : 1;
+                    habit.LastCheckDate = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                }
+
                 return Ok(new
                 {
-                    message = "Звичка успішно позначена як виконана.",
-                    completion = new
-                    {
-                        completion.CompletionId,
-                        completion.HabitId,
-                        completion.CompletedAt,
-                        completion.CoinsEarned
-                    },
-                    newStreak = habit.Streak
+                    message = "Виконання додано.",
+                    completedToday = completionsToday,
+                    target = habit.RepeatCount,
+                    streak = habit.Streak
                 });
             }
             catch (Exception)

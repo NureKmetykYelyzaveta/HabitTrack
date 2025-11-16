@@ -4,7 +4,7 @@ class AuthService {
         // Choose API base dynamically:
         // - Always use http://localhost:5000/api (backend from run.sh)
         // - If backend is on different URL, change here
-        this.apiBaseUrl = 'http://localhost:5000/api';
+        this.apiBaseUrl = 'https://localhost:7015/api';
         this.sessionKey = 'habittrack_session';
         this.activityTimeout = 30 * 60 * 1000; // 30 хвилин
         this.checkInterval = 60 * 1000; // перевірка кожну хвилину
