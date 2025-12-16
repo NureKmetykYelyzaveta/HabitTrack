@@ -11,6 +11,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.15)",
+    borderColor: "rgba(0, 255, 136, 0.15)",
+    overflow: 'hidden',
+    backdropFilter: 'blur(10px)',
   },
 });
