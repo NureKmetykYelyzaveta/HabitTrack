@@ -9,6 +9,7 @@ import HomeScreen from "./screens/HomeScreen";
 import HabitsScreen from "./screens/HabitsScreen";
 import StatsScreen from "./screens/StatsScreen";
 import ProfileScreen from "./screens/ProfileScreen";
+import ArchiveScreen from "./screens/ArchiveScreen";
 import { AuthProvider } from "./context/AuthContext";
 import apiService from "./services/api";
 
@@ -92,6 +93,11 @@ function RootNavigator({ onLogout }) {
             name="Stats"
             component={StatsScreen}
             options={{ title: "Статистика" }}
+          />
+          <Stack.Screen
+            name="Archive"
+            component={ArchiveScreen}
+            options={{ title: "Архів" }}
           />
           <Stack.Screen
             name="Profile"

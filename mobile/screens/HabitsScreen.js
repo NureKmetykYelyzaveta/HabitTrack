@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -11,32 +11,49 @@ import {
   Alert,
   ActivityIndicator,
   Picker,
+  ScrollView,
 } from "react-native";
 import Glass from "../components/Glass";
 import { colors } from "../theme";
 import apiService from "../services/api";
+import { AuthContext } from "../context/AuthContext";
 
 export default function HabitsScreen({ navigation }) {
+  const authContext = useContext(AuthContext);
   const [habits, setHabits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingHabit, setEditingHabit] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [noteModalVisible, setNoteModalVisible] = useState(false);
+  const [selectedHabitForNote, setSelectedHabitForNote] = useState(null);
+  const [noteText, setNoteText] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
     category: "спорт",
-    repeatCount: 0,
+    note: "",
+    repeatCount: 1,
+    goal: 7,
+    isComplex: false,
   });
 
   useEffect(() => {
-    loadHabits();
-  }, []);
+    if (authContext.user?.userId) {
+      loadHabits();
+    }
+  }, [authContext.user?.userId]);
 
   const loadHabits = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getHabits();
-      setHabits(response.habits || []);
+      const user = authContext.user;
+      if (!user || !user.userId) {
+        Alert.alert("Помилка", "Користувач не авторизований");
+        return;
+      }
+      const data = await apiService.getHabitsByUser(user.userId);
+      setHabits(data || []);
     } catch (error) {
       Alert.alert("Помилка", "Не вдалося завантажити звички");
       console.error(error);
@@ -51,14 +68,20 @@ export default function HabitsScreen({ navigation }) {
       setFormData({
         name: habit.name,
         category: habit.category,
-        repeatCount: habit.repeatCount,
+        note: habit.note || "",
+        repeatCount: habit.repeatCount || 1,
+        goal: habit.goal || 7,
+        isComplex: (habit.repeatCount || 1) > 1,
       });
     } else {
       setEditingHabit(null);
       setFormData({
         name: "",
         category: "спорт",
-        repeatCount: 0,
+        note: "",
+        repeatCount: 1,
+        goal: 7,
+        isComplex: false,
       });
     }
     setModalVisible(true);
@@ -76,11 +99,25 @@ export default function HabitsScreen({ navigation }) {
     }
 
     try {
+      const user = authContext.user;
+      if (!user || !user.userId) {
+        Alert.alert("Помилка", "Користувач не авторизований");
+        return;
+      }
+
+      const habitData = {
+        userId: user.userId,
+        name: formData.name.trim(),
+        category: formData.category,
+        note: formData.note || "",
+        repeatCount: formData.isComplex ? formData.repeatCount : 1,
+      };
+
       if (editingHabit) {
-        await apiService.updateHabit(editingHabit.habitId, formData);
+        await apiService.updateHabit(editingHabit.habitId, habitData);
         Alert.alert("Успіх", "Звичку оновлено");
       } else {
-        await apiService.createHabit(formData);
+        await apiService.createHabit(habitData);
         Alert.alert("Успіх", "Звичку додано");
       }
       closeModal();
@@ -101,7 +138,12 @@ export default function HabitsScreen({ navigation }) {
           text: "Видалити",
           onPress: async () => {
             try {
-              await apiService.deleteHabit(habitId);
+              const user = authContext.user;
+              if (!user || !user.userId) {
+                Alert.alert("Помилка", "Користувач не авторизований");
+                return;
+              }
+              await apiService.deleteHabit(habitId, user.userId);
               loadHabits();
               Alert.alert("Успіх", "Звичку видалено");
             } catch (error) {
@@ -115,13 +157,82 @@ export default function HabitsScreen({ navigation }) {
 
   const completeHabit = async (habitId) => {
     try {
-      const today = new Date().toISOString().split("T")[0];
-      await apiService.completeHabit(habitId, today);
+      const user = authContext.user;
+      if (!user || !user.userId) {
+        Alert.alert("Помилка", "Користувач не авторизований");
+        return;
+      }
+      const data = await apiService.completeHabit(habitId, user.userId);
+      Alert.alert("Успіх", `✅ Звичка виконана! Streak: ${data.streak} днів`);
       loadHabits();
     } catch (error) {
-      Alert.alert("Помилка", "Не вдалося відмітити звичку");
+      const errorMessage = error.response?.data?.message || error.message || "Не вдалося відмітити звичку";
+      Alert.alert("Помилка", errorMessage);
     }
   };
+
+  const archiveHabit = async (habitId) => {
+    Alert.alert(
+      "Архівувати звичку?",
+      "Звичку буде переміщено в архів",
+      [
+        { text: "Скасувати", style: "cancel" },
+        {
+          text: "Архівувати",
+          onPress: async () => {
+            try {
+              const user = authContext.user;
+              if (!user || !user.userId) {
+                Alert.alert("Помилка", "Користувач не авторизований");
+                return;
+              }
+              await apiService.archiveHabit(habitId, user.userId);
+              Alert.alert("Успіх", "Звичку архівовано");
+              loadHabits();
+            } catch (error) {
+              Alert.alert("Помилка", "Не вдалося архівувати звичку");
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const openNoteModal = (habit) => {
+    setSelectedHabitForNote(habit);
+    setNoteText(habit.note || "");
+    setNoteModalVisible(true);
+  };
+
+  const saveNote = async () => {
+    if (!selectedHabitForNote) return;
+
+    try {
+      const user = authContext.user;
+      if (!user || !user.userId) {
+        Alert.alert("Помилка", "Користувач не авторизований");
+        return;
+      }
+
+      await apiService.updateHabit(selectedHabitForNote.habitId, {
+        userId: user.userId,
+        name: selectedHabitForNote.name,
+        category: selectedHabitForNote.category,
+        note: noteText,
+        repeatCount: selectedHabitForNote.repeatCount || 1,
+      });
+
+      Alert.alert("Успіх", "Нотатку збережено");
+      setNoteModalVisible(false);
+      loadHabits();
+    } catch (error) {
+      Alert.alert("Помилка", "Не вдалося зберегти нотатку");
+    }
+  };
+
+  const filteredHabits = selectedCategory === "all"
+    ? habits
+    : habits.filter((h) => h.category === selectedCategory);
 
   const renderHabitItem = ({ item }) => (
     <Glass style={styles.habitItem}>
@@ -129,8 +240,21 @@ export default function HabitsScreen({ navigation }) {
         <View style={styles.habitInfo}>
           <Text style={styles.habitName}>{item.name}</Text>
           <Text style={styles.habitCategory}>{item.category}</Text>
+          {item.repeatCount > 1 && (
+            <Text style={styles.repeatInfo}>
+              🔁 Повторень: {item.repeatCount} раз(и) на день
+            </Text>
+          )}
+          {item.note ? (
+            <Text style={styles.notePreview} numberOfLines={2}>
+              📝 {item.note}
+            </Text>
+          ) : null}
+          <Text style={styles.completionInfo}>
+            Виконано: {item.completionCount || 0} раз(и)
+          </Text>
         </View>
-        <Text style={styles.habitStreak}>🔥 {item.repeatCount}</Text>
+        <Text style={styles.habitStreak}>🔥 {item.streak || 0}</Text>
       </View>
 
       <View style={styles.habitActions}>
@@ -142,10 +266,24 @@ export default function HabitsScreen({ navigation }) {
         </TouchableOpacity>
 
         <TouchableOpacity
+          style={[styles.actionBtn, styles.noteBtn]}
+          onPress={() => openNoteModal(item)}
+        >
+          <Text style={styles.actionBtnText}>📝</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={[styles.actionBtn, styles.editBtn]}
           onPress={() => openModal(item)}
         >
           <Text style={styles.actionBtnText}>✏️</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionBtn, styles.archiveBtn]}
+          onPress={() => archiveHabit(item.habitId)}
+        >
+          <Text style={styles.actionBtnText}>📦</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -182,17 +320,40 @@ export default function HabitsScreen({ navigation }) {
         <Text style={styles.addBtnText}>➕ Додати звичку</Text>
       </TouchableOpacity>
 
-      {habits.length === 0 ? (
+      {habits.length > 0 && (
+        <View style={styles.filterContainer}>
+          <Text style={styles.filterLabel}>Категорія:</Text>
+          <Picker
+            selectedValue={selectedCategory}
+            onValueChange={setSelectedCategory}
+            style={styles.picker}
+          >
+            <Picker.Item label="Усі" value="all" />
+            <Picker.Item label="Сон" value="сон" />
+            <Picker.Item label="Спорт" value="спорт" />
+            <Picker.Item label="Харчування" value="харчування" />
+            <Picker.Item label="Інше" value="інше" />
+          </Picker>
+        </View>
+      )}
+
+      {filteredHabits.length === 0 ? (
         <Glass style={styles.emptyState}>
           <Text style={styles.emptyStateIcon}>📝</Text>
-          <Text style={styles.emptyStateText}>У вас немає звичок</Text>
+          <Text style={styles.emptyStateText}>
+            {habits.length === 0
+              ? "У вас немає звичок"
+              : "Немає звичок в цій категорії"}
+          </Text>
           <Text style={styles.emptyStateSubtext}>
-            Додайте першу звичку, щоб почати
+            {habits.length === 0
+              ? "Додайте першу звичку, щоб почати"
+              : "Спробуйте іншу категорію"}
           </Text>
         </Glass>
       ) : (
         <FlatList
-          data={habits}
+          data={filteredHabits}
           renderItem={renderHabitItem}
           keyExtractor={(item) => item.habitId.toString()}
           contentContainerStyle={styles.list}
@@ -250,21 +411,61 @@ export default function HabitsScreen({ navigation }) {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.label}>Ціль (днів)</Text>
+                <Text style={styles.label}>Нотатка (опційно)</Text>
                 <TextInput
-                  style={styles.input}
-                  placeholder="7"
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Додаткова інформація про звичку..."
                   placeholderTextColor="#888"
-                  keyboardType="number-pad"
-                  value={formData.repeatCount.toString()}
+                  value={formData.note}
                   onChangeText={(text) =>
-                    setFormData({
-                      ...formData,
-                      repeatCount: parseInt(text) || 0,
-                    })
+                    setFormData({ ...formData, note: text })
                   }
+                  multiline
+                  numberOfLines={3}
                 />
               </View>
+
+              <View style={styles.formGroup}>
+                <View style={styles.checkboxContainer}>
+                  <TouchableOpacity
+                    style={styles.checkbox}
+                    onPress={() =>
+                      setFormData({
+                        ...formData,
+                        isComplex: !formData.isComplex,
+                      })
+                    }
+                  >
+                    <Text style={styles.checkboxText}>
+                      {formData.isComplex ? "☑️" : "☐"}
+                    </Text>
+                  </TouchableOpacity>
+                  <Text style={styles.checkboxLabel}>
+                    Складна звичка (кілька разів на день)
+                  </Text>
+                </View>
+              </View>
+
+              {formData.isComplex && (
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>
+                    Кількість виконань на день
+                  </Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="1"
+                    placeholderTextColor="#888"
+                    keyboardType="number-pad"
+                    value={formData.repeatCount.toString()}
+                    onChangeText={(text) =>
+                      setFormData({
+                        ...formData,
+                        repeatCount: parseInt(text) || 1,
+                      })
+                    }
+                  />
+                </View>
+              )}
 
               <View style={styles.modalButtons}>
                 <TouchableOpacity
@@ -283,6 +484,52 @@ export default function HabitsScreen({ navigation }) {
                   </Text>
                 </TouchableOpacity>
               </View>
+            </View>
+          </Glass>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={noteModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setNoteModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <Glass style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                Нотатка до звички: {selectedHabitForNote?.name}
+              </Text>
+              <TouchableOpacity onPress={() => setNoteModalVisible(false)}>
+                <Text style={styles.closeBtn}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Опиши свої думки, прогрес або настрій..."
+              placeholderTextColor="#888"
+              value={noteText}
+              onChangeText={setNoteText}
+              multiline
+              numberOfLines={5}
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.btn, styles.btnCancel]}
+                onPress={() => setNoteModalVisible(false)}
+              >
+                <Text style={styles.btnCancelText}>Закрити</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.btn, styles.btnSave]}
+                onPress={saveNote}
+              >
+                <Text style={styles.btnSaveText}>💾 Зберегти</Text>
+              </TouchableOpacity>
             </View>
           </Glass>
         </View>
@@ -379,6 +626,14 @@ const styles = StyleSheet.create({
   editBtn: {
     backgroundColor: "rgba(100, 150, 255, 0.1)",
     borderColor: "#6496ff",
+  },
+  noteBtn: {
+    backgroundColor: "rgba(255, 200, 100, 0.1)",
+    borderColor: "#ffc864",
+  },
+  archiveBtn: {
+    backgroundColor: "rgba(150, 100, 255, 0.1)",
+    borderColor: "#9664ff",
   },
   deleteBtn: {
     backgroundColor: "rgba(255, 100, 100, 0.1)",
@@ -493,5 +748,52 @@ const styles = StyleSheet.create({
   btnSaveText: {
     color: "#000",
     fontWeight: "bold",
+  },
+  filterContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  filterLabel: {
+    color: colors.neon,
+    fontSize: 14,
+    fontWeight: "600",
+    marginRight: 12,
+  },
+  repeatInfo: {
+    color: "#aaa",
+    fontSize: 12,
+    marginTop: 4,
+  },
+  notePreview: {
+    color: "#aaa",
+    fontSize: 12,
+    marginTop: 4,
+    fontStyle: "italic",
+  },
+  completionInfo: {
+    color: "#aaa",
+    fontSize: 12,
+    marginTop: 4,
+  },
+  textArea: {
+    minHeight: 80,
+    textAlignVertical: "top",
+  },
+  checkboxContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  checkbox: {
+    marginRight: 8,
+  },
+  checkboxText: {
+    fontSize: 20,
+  },
+  checkboxLabel: {
+    color: colors.text,
+    fontSize: 14,
+    flex: 1,
   },
 });

@@ -27,6 +27,17 @@ export default function ProfileScreen({ navigation, route }) {
     email: user?.email || "",
   });
 
+  // Синхронізуємо з контекстом при зміні
+  useEffect(() => {
+    if (authContext.user) {
+      setUser(authContext.user);
+      setFormData({
+        username: authContext.user.username || "",
+        email: authContext.user.email || "",
+      });
+    }
+  }, [authContext.user]);
+
   const handleLogout = () => {
     Alert.alert("Вихід", "Ви впевнені?", [
       { text: "Скасувати" },
@@ -50,11 +61,17 @@ export default function ProfileScreen({ navigation, route }) {
     setLoading(true);
     try {
       const response = await apiService.updateProfile(user?.userId, formData);
-      setUser(response);
+      // Оновлюємо користувача в контексті та локальному стані
+      const updatedUser = { ...user, ...response };
+      setUser(updatedUser);
+      // Оновлюємо в контексті через setUser з AuthContext
+      if (authContext.user) {
+        authContext.user = updatedUser;
+      }
       setEditMode(false);
       Alert.alert("Успіх", "Профіль оновлено");
     } catch (error) {
-      Alert.alert("Помилка", "Не вдалося оновити профіль");
+      Alert.alert("Помилка", error.response?.data?.message || "Не вдалося оновити профіль");
     } finally {
       setLoading(false);
     }

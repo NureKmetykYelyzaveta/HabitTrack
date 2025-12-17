@@ -85,6 +85,12 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.navBtn, styles.navBtnSecondary]}
+            onPress={() => navigation.navigate("Archive")}
+          >
+            <Text style={styles.navBtnText}>📦 Архів</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.navBtn, styles.navBtnSecondary]}
             onPress={() => navigation.navigate("Profile")}
           >
             <Text style={styles.navBtnText}>👤 Профіль</Text>
@@ -201,6 +207,7 @@ const styles = StyleSheet.create({
   },
   navButtons: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
     marginBottom: 32,
   },

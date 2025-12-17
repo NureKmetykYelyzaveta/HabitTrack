@@ -97,6 +97,15 @@ class APIService {
     }
   }
 
+  async getHabitsByUser(userId) {
+    try {
+      const response = await this.api.get(`/habit/user/${userId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+
   async createHabit(habitData) {
     try {
       const response = await this.api.post('/habit', habitData);
@@ -115,20 +124,18 @@ class APIService {
     }
   }
 
-  async deleteHabit(habitId) {
+  async deleteHabit(habitId, userId) {
     try {
-      const response = await this.api.delete(`/habit/${habitId}`);
+      const response = await this.api.delete(`/habit/${habitId}?userId=${userId}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
     }
   }
 
-  async completeHabit(habitId, completionDate) {
+  async completeHabit(habitId, userId) {
     try {
-      const response = await this.api.post(`/habit/${habitId}/complete`, {
-        completionDate,
-      });
+      const response = await this.api.post(`/habit/${habitId}/complete?userId=${userId}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -138,6 +145,34 @@ class APIService {
   async getStats() {
     try {
       const response = await this.api.get('/habit/stats');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+
+  // Archive API
+  async getArchivedHabits(userId) {
+    try {
+      const response = await this.api.get(`/habit/user/${userId}/archived`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+
+  async archiveHabit(habitId, userId) {
+    try {
+      const response = await this.api.post(`/habit/${habitId}/archive?userId=${userId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+
+  async unarchiveHabit(habitId, userId) {
+    try {
+      const response = await this.api.post(`/habit/${habitId}/unarchive?userId=${userId}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
