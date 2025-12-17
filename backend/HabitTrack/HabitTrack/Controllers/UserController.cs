@@ -101,6 +101,7 @@ namespace HabitTrack.Controllers
                 user.Role,
                 user.Balance,
                 AvatarUrl = avatarUrl,
+                SelectedAvatar = user.SelectedAvatar ?? "character-default.png",
                 user.CreatedAt
             });
         }
@@ -134,6 +135,7 @@ namespace HabitTrack.Controllers
                 user.Role,
                 user.Balance,
                 AvatarUrl = avatarUrl,
+                SelectedAvatar = user.SelectedAvatar ?? "character-default.png",
                 user.CreatedAt
             });
         }
@@ -159,5 +161,48 @@ namespace HabitTrack.Controllers
 
             return Ok(new { message = "Пароль успішно змінено." });
         }
+
+        // PUT: api/user/{id}/avatar/select - Вибрати аватар з інвентаря
+        [HttpPut("{id}/avatar/select")]
+        public async Task<IActionResult> SelectAvatar(int id, [FromBody] SelectAvatarRequest request)
+        {
+            try
+            {
+                var user = await _context.Users
+                    .Include(u => u.Inventory)
+                    .ThenInclude(i => i.Clothes)
+                    .FirstOrDefaultAsync(u => u.UserId == id);
+
+                if (user == null)
+                    return NotFound(new { message = "Користувача не знайдено." });
+
+                // Якщо вибрано дефолтний аватар
+                if (request.AvatarName == "character-default.png" || string.IsNullOrEmpty(request.AvatarName))
+                {
+                    user.SelectedAvatar = "character-default.png";
+                    await _context.SaveChangesAsync();
+                    return Ok(new { message = "Аватар успішно змінено.", selectedAvatar = "character-default.png" });
+                }
+
+                // Перевіряємо чи є цей костюм в інвентарі
+                var hasItem = user.Inventory.Any(i => i.Clothes.PhotoUrl == request.AvatarName);
+                if (!hasItem)
+                    return BadRequest(new { message = "Цей костюм не знайдено в вашому інвентарі." });
+
+                user.SelectedAvatar = request.AvatarName;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { message = "Аватар успішно змінено.", selectedAvatar = request.AvatarName });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Помилка при зміні аватара.", error = ex.Message });
+            }
+        }
+    }
+
+    public class SelectAvatarRequest
+    {
+        public string AvatarName { get; set; } = null!;
     }
 }

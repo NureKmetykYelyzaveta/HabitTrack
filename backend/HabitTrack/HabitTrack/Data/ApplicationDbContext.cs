@@ -33,6 +33,7 @@ namespace HabitTrack.Data
                 entity.Property(e => e.Password).HasColumnName("password").IsRequired();
                 entity.Property(e => e.Role).HasColumnName("role").HasDefaultValue("user");
                 entity.Property(e => e.ProfilePhotoUrl).HasColumnName("profile_photo_url");
+                entity.Property(e => e.SelectedAvatar).HasColumnName("selected_avatar");
                 entity.Property(e => e.Balance).HasColumnName("balance").HasDefaultValue(0);
                 entity.Property(e => e.ProfileLink).HasColumnName("profile_link");
                 entity.Property(e => e.CreatedAt).HasColumnName("created_at").HasDefaultValueSql("CURRENT_TIMESTAMP");

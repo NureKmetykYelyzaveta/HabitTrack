@@ -96,8 +96,23 @@ namespace HabitTrack
                 });
             }
 
-            app.UseHttpsRedirection();
+            // Serve assets folder (for character images)
+            var assetsPath = Path.Combine(builder.Environment.ContentRootPath, "..", "..", "..", "assets");
+            if (Directory.Exists(assetsPath))
+            {
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = new PhysicalFileProvider(Path.GetFullPath(assetsPath)),
+                    RequestPath = "/assets"
+                });
+            }
+
+            // CORS должен быть перед другими middleware
             app.UseCors("AllowFrontend");
+            
+            // Отключаем HTTPS редирект для локальной разработки
+            // app.UseHttpsRedirection();
+            
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
