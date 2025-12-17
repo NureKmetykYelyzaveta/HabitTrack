@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HabitTrack — Магазин</title>
+  <link rel="stylesheet" href="./style/main.css" />
+  <link rel="stylesheet" href="./style/shop.css" />
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script src="./js/auth.js"></script>
+  <style>
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.8);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #00ff88;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00cc66;
+    }
+  </style>
+</head>
+<body>
+
+<header class="navbar glass">
+  <div class="logo">HabitTrack</div>
+  <nav class="nav-links">
+    <a href="./main.html">Головна</a>
+    <a href="./profile.html">Профіль</a>
+    <a href="./habits.html">Звички</a>
+  </nav>
+  <div class="auth-buttons" id="authButtons">
+    <!-- Буде заповнено JavaScript -->
+  </div>
+</header>
+
+<main class="shop-wrap">
+  <div class="shop-header glass">
+    <h1>Магазин аватарів</h1>
+    <div class="balance-display">
+      <span class="balance-label">Ваш баланс:</span>
+      <span class="balance-amount" id="userBalance">0</span>
+      <span class="balance-currency">монет</span>
+    </div>
+  </div>
+
+  <div class="shop-content">
+    <div class="shop-grid" id="shopGrid">
+      <!-- Костюми будуть додані через JavaScript -->
+    </div>
+  </div>
+</main>
+
+<div id="particles-js"></div>
+
+<script>
+  let currentUser = null;
+  let shopItems = [];
+
+  // Ініціалізація particles.js
+  particlesJS("particles-js", {
+    "particles": {
+      "number": {"value": 45},
+      "color": {"value": "#00ff88"},
+      "shape": {"type": "circle"},
+      "opacity": {"value": 0.35},
+      "size": {"value": 2, "random": true},
+      "line_linked": {"enable": true, "distance": 140, "color": "#00ff88", "opacity": 0.25, "width": 1},
+      "move": {"enable": true, "speed": 1.6}
+    },
+    "interactivity": {
+      "events": {"onhover": {"enable": true, "mode": "repulse"}},
+      "modes": {"repulse": {"distance": 120}}
+    }
+  });
+
+  // Перевірка авторизації
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (!authService.checkPageAuth()) return;
+
+    currentUser = authService.getCurrentUser();
+    
+    // Оновлюємо навігацію
+    const authButtons = document.getElementById('authButtons');
+    authButtons.innerHTML = `
+      <span class="user-greeting">Привіт, ${currentUser.username}!</span>
+      <a href="main.html" class="btn btn-outline">Головна</a>
+      <button onclick="authService.logout()" class="btn btn-fill">Вийти</button>
+    `;
+
+    await loadShopItems();
+  });
+
+  // Завантаження товарів магазину
+  async function loadShopItems() {
+    try {
+      const response = await fetch(`${authService.apiBaseUrl}/shop/items?userId=${currentUser.userId}`);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Помилка завантаження магазину');
+      }
+
+      shopItems = data.items || [];
+      document.getElementById('userBalance').textContent = data.userBalance || 0;
+
+      renderShopItems();
+    } catch (error) {
+      console.error('Помилка завантаження магазину:', error);
+      authService.showError('Не вдалося завантажити магазин');
+    }
+  }
+
+  // Відображення товарів
+  function renderShopItems() {
+    const grid = document.getElementById('shopGrid');
+    grid.innerHTML = '';
+
+    // Спочатку доступні, потім куплені
+    const available = shopItems.filter(item => !item.isPurchased);
+    const purchased = shopItems.filter(item => item.isPurchased);
+
+    [...available, ...purchased].forEach(item => {
+      const itemCard = document.createElement('div');
+      itemCard.className = `shop-item glass ${item.isPurchased ? 'purchased' : ''}`;
+      
+      const imagePath = `/assets/videos/character/${item.photoUrl}`;
+      
+      itemCard.innerHTML = `
+        <div class="item-image">
+          <img src="${imagePath}" alt="${item.name}" 
+               onerror="this.src='/assets/videos/character/character-default.png'">
+          ${item.isPurchased ? '<div class="purchased-badge">Куплено</div>' : ''}
+        </div>
+        <div class="item-info">
+          <h3>${item.name}</h3>
+          <div class="item-price">
+            ${item.isPurchased ? 
+              '<span class="price-purchased">Куплено</span>' : 
+              `<span class="price-amount">${item.price} монет</span>`
+            }
+          </div>
+          <button class="item-button ${item.isPurchased ? 'btn-purchased' : 'btn-buy'}" 
+                  onclick="handleItemClick(${item.clothesId}, ${item.isPurchased})"
+                  ${item.isPurchased ? 'disabled' : ''}>
+            ${item.isPurchased ? 'Куплено' : 'Купити'}
+          </button>
+        </div>
+      `;
+      
+      grid.appendChild(itemCard);
+    });
+  }
+
+  // Обробка кліку на товар
+  async function handleItemClick(clothesId, isPurchased) {
+    if (isPurchased) return;
+
+    const item = shopItems.find(i => i.clothesId === clothesId);
+    if (!item) return;
+
+    if (currentUser.balance < item.price) {
+      authService.showError('Недостатньо коштів!');
+      return;
+    }
+
+    if (!confirm(`Купити "${item.name}" за ${item.price} монет?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${authService.apiBaseUrl}/shop/purchase`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: currentUser.userId,
+          clothesId: clothesId
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Помилка покупки');
+      }
+
+      authService.showSuccess('Костюм успішно придбано!');
+      
+      // Оновлюємо баланс
+      currentUser.balance = result.newBalance;
+      document.getElementById('userBalance').textContent = result.newBalance;
+      
+      // Оновлюємо список товарів
+      await loadShopItems();
+    } catch (error) {
+      console.error('Помилка покупки:', error);
+      authService.showError(error.message || 'Помилка покупки костюма');
+    }
+  }
+</script>
+
+</body>
+</html>
+

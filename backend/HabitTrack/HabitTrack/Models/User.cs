@@ -25,6 +25,9 @@ namespace HabitTrack.Models
         [Column("profile_photo_url")]
         public string? ProfilePhotoUrl { get; set; }
 
+        [Column("selected_avatar")]
+        public string? SelectedAvatar { get; set; }
+
         [Column("balance")]
         public int Balance { get; set; } = 0;
 

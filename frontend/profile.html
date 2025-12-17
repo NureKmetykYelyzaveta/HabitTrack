@@ -52,9 +52,11 @@
     <section class="profile-card glass">
       <aside class="profile-side">
         <div class="avatar-wrap">
-          <img id="avatarPreview" src="https://api.dicebear.com/7.x/identicon/svg?seed=HabitUser" alt="Аватар користувача" />
+          <img id="avatarPreview" src="/assets/videos/character/character-default.png" alt="Аватар користувача" />
           <div id="avatarActions">
             <button class="btn-outline" id="editProfileBtn">Редагувати профіль</button>
+            <button class="btn-outline" id="selectAvatarBtn" onclick="showAvatarSelector()">Вибрати аватар</button>
+            <a href="./shop.html" class="btn-outline" style="text-decoration: none; text-align: center; display: block; margin-top: 8px;">Магазин</a>
             <label class="btn-outline file-label" id="uploadAvatarBtn" style="display: none;">
               Завантажити аватар
               <input id="avatarInput" type="file" accept="image/*" hidden />
@@ -85,6 +87,14 @@
           <span class="badge">#раннійптах</span>
           <span class="badge">#фітнес</span>
           <span class="badge">#фокус</span>
+        </div>
+
+        <!-- Інвентарь костюмів -->
+        <div class="inventory-section" id="inventorySection" style="display: none;">
+          <h3 style="font-size: 16px; color: #00ff88; margin-bottom: 12px;">Мій інвентар</h3>
+          <div class="inventory-grid" id="inventoryGrid">
+            <!-- Костюми будуть додані через JavaScript -->
+          </div>
         </div>
       </aside>
 
@@ -147,6 +157,21 @@
   </main>
 
   <div id="particles-js"></div>
+
+  <!-- Модальне вікно для вибору аватара -->
+  <div id="avatarModal" class="modal" style="display: none;">
+    <div class="modal-content glass">
+      <div class="modal-header">
+        <h2>Виберіть аватар</h2>
+        <button class="modal-close" onclick="closeAvatarSelector()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="avatar-selector-grid" id="avatarSelectorGrid">
+          <!-- Аватари будуть додані через JavaScript -->
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
     let currentUser = null;
@@ -214,26 +239,111 @@
         document.getElementById('username').value = userData.username || '';
         document.getElementById('email').value = userData.email || '';
         
-        // Оновлюємо аватар (будуємо абсолютний URL до бекенду, якщо потрібно)
-        if (userData.avatarUrl) {
-          let avatarUrl = userData.avatarUrl;
-          try {
-            // Якщо від бекенду прийшов відносний шлях (наприклад "/api/user/..."),
-            // додаємо базовий URL до API (http://localhost:5000)
-            if (avatarUrl.startsWith('/')) {
-              const apiBase = authService.apiBaseUrl.replace(/\/api\/?$/, '');
-              avatarUrl = apiBase + avatarUrl;
-            }
-          } catch (e) {
-            console.error('Error building avatar URL', e);
-          }
-          document.getElementById('avatarPreview').src = avatarUrl;
-        }
+        // Оновлюємо аватар (використовуємо вибраний аватар або дефолтний)
+        const selectedAvatar = userData.selectedAvatar || 'character-default.png';
+        const avatarPath = `/assets/videos/character/${selectedAvatar}`;
+        document.getElementById('avatarPreview').src = avatarPath;
+
+        // Завантажуємо інвентарь
+        await loadInventory();
 
       } catch (error) {
         console.error('Помилка завантаження даних:', error);
         authService.showError('Помилка завантаження профілю');
       }
+    }
+
+    // Завантаження інвентаря
+    async function loadInventory() {
+      try {
+        const inventory = await authService.getUserInventory(currentUser.userId);
+        
+        if (inventory && inventory.length > 0) {
+          document.getElementById('inventorySection').style.display = 'block';
+          renderInventory(inventory);
+        }
+      } catch (error) {
+        console.error('Помилка завантаження інвентаря:', error);
+      }
+    }
+
+    // Відображення інвентаря
+    function renderInventory(inventory) {
+      const grid = document.getElementById('inventoryGrid');
+      grid.innerHTML = '';
+
+      inventory.forEach(item => {
+        const itemCard = document.createElement('div');
+        itemCard.className = 'inventory-item';
+        itemCard.innerHTML = `
+          <img src="/assets/videos/character/${item.photoUrl}" 
+               alt="${item.name}"
+               onerror="this.src='/assets/videos/character/character-default.png'">
+        `;
+        itemCard.onclick = () => selectAvatarFromInventory(item.photoUrl);
+        grid.appendChild(itemCard);
+      });
+    }
+
+    // Вибір аватара з інвентаря
+    async function selectAvatarFromInventory(avatarName) {
+      try {
+        await authService.selectAvatar(currentUser.userId, avatarName);
+        authService.showSuccess('Аватар успішно змінено!');
+        
+        // Оновлюємо відображення
+        const avatarPath = `/assets/videos/character/${avatarName}`;
+        document.getElementById('avatarPreview').src = avatarPath;
+        
+        // Оновлюємо дані користувача
+        await loadUserData();
+      } catch (error) {
+        authService.showError(error.message || 'Помилка зміни аватара');
+      }
+    }
+
+    // Показати селектор аватара
+    async function showAvatarSelector() {
+      const modal = document.getElementById('avatarModal');
+      const grid = document.getElementById('avatarSelectorGrid');
+      
+      // Додаємо дефолтний аватар
+      grid.innerHTML = '';
+      
+      const defaultCard = document.createElement('div');
+      defaultCard.className = 'avatar-selector-item';
+      defaultCard.innerHTML = `
+        <img src="/assets/videos/character/character-default.png" alt="Дефолтний">
+        <span>Дефолтний</span>
+      `;
+      defaultCard.onclick = () => selectAvatarFromInventory('character-default.png');
+      grid.appendChild(defaultCard);
+
+      // Завантажуємо інвентарь
+      try {
+        const inventory = await authService.getUserInventory(currentUser.userId);
+        inventory.forEach(item => {
+          const itemCard = document.createElement('div');
+          itemCard.className = 'avatar-selector-item';
+          itemCard.innerHTML = `
+            <img src="/assets/videos/character/${item.photoUrl}" 
+                 alt="${item.name}"
+                 onerror="this.src='/assets/videos/character/character-default.png'">
+            <span>${item.name}</span>
+          `;
+          itemCard.onclick = () => selectAvatarFromInventory(item.photoUrl);
+          grid.appendChild(itemCard);
+        });
+      } catch (error) {
+        console.error('Помилка завантаження інвентаря:', error);
+      }
+
+      modal.style.display = 'flex';
+    }
+
+    // Закрити селектор аватара
+    function closeAvatarSelector() {
+      document.getElementById('avatarModal').style.display = 'none';
     }
 
     // Обробка завантаження аватара

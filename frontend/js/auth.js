@@ -4,7 +4,7 @@ class AuthService {
         // Choose API base dynamically:
         // - Always use http://localhost:5000/api (backend from run.sh)
         // - If backend is on different URL, change here
-        this.apiBaseUrl = 'https://localhost:7015/api';
+        this.apiBaseUrl = 'http://localhost:5000/api';
         this.sessionKey = 'habittrack_session';
         this.activityTimeout = 30 * 60 * 1000; // 30 хвилин
         this.checkInterval = 60 * 1000; // перевірка кожну хвилину
@@ -24,17 +24,33 @@ class AuthService {
                 body: JSON.stringify(userData)
             });
 
-            const result = await response.json();
+            // Проверяем, есть ли ответ
+            if (!response) {
+                throw new Error('Не вдалося підключитися до сервера. Перевірте, чи запущений сервер на http://localhost:5000');
+            }
+
+            let result;
+            try {
+                result = await response.json();
+            } catch (jsonError) {
+                // Если не удалось распарсить JSON, значит сервер вернул не JSON
+                const text = await response.text();
+                throw new Error(`Помилка сервера: ${text || response.statusText}`);
+            }
             
             if (!response.ok) {
                 // Отримуємо деталізовану помилку з сервера
-                const errorMessage = result.message || 'Помилка реєстрації';
+                const errorMessage = result.message || result.title || `Помилка реєстрації (${response.status})`;
                 throw new Error(errorMessage);
             }
 
             return result;
         } catch (error) {
             console.error('Помилка реєстрації:', error);
+            // Если это ошибка сети
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                throw new Error('Не вдалося підключитися до сервера. Переконайтеся, що сервер запущений на http://localhost:5000');
+            }
             throw error;
         }
     }
@@ -305,6 +321,47 @@ class AuthService {
         setTimeout(() => {
             successDiv.style.display = 'none';
         }, 3000);
+    }
+
+    // Отримати інвентарь користувача
+    async getUserInventory(userId) {
+        try {
+            const response = await fetch(`${this.apiBaseUrl}/shop/inventory/${userId}`);
+            const result = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(result.message || 'Помилка завантаження інвентаря');
+            }
+
+            return result.inventory || [];
+        } catch (error) {
+            console.error('Помилка завантаження інвентаря:', error);
+            throw error;
+        }
+    }
+
+    // Вибрати аватар
+    async selectAvatar(userId, avatarName) {
+        try {
+            const response = await fetch(`${this.apiBaseUrl}/user/${userId}/avatar/select`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ avatarName })
+            });
+
+            const result = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(result.message || 'Помилка вибору аватара');
+            }
+
+            return result;
+        } catch (error) {
+            console.error('Помилка вибору аватара:', error);
+            throw error;
+        }
     }
 }
 
